@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ interface Transaction {
 
 const MonitoringDashboard = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [newAddress, setNewAddress] = useState("");
   const [newCaseId, setNewCaseId] = useState("");
   const [selectedBlockchain, setSelectedBlockchain] = useState("bitcoin");
@@ -277,7 +279,11 @@ const MonitoringDashboard = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 mt-4 md:mt-0">
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigate(`/wallet/${wallet.id}`)}
+                  >
                     View Details
                   </Button>
                 </div>
