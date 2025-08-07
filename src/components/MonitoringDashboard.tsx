@@ -193,14 +193,51 @@ const MonitoringDashboard = () => {
               <Label htmlFor="blockchain">Blockchain</Label>
               <select
                 id="blockchain"
-                className="w-full px-3 py-2 border border-input bg-background rounded-md"
+                className="w-full px-3 py-2 border border-input bg-background rounded-md text-foreground z-50"
                 value={selectedBlockchain}
                 onChange={(e) => setSelectedBlockchain(e.target.value)}
               >
-                <option value="bitcoin">Bitcoin</option>
-                <option value="ethereum">Ethereum</option>
+                <option value="bitcoin">Bitcoin Mainnet</option>
+                <option value="ethereum">Ethereum Mainnet</option>
+                <option value="bsc">Binance Smart Chain</option>
+                <option value="polygon">Polygon</option>
+                <option value="arbitrum">Arbitrum Mainnet</option>
+                <option value="avalanche">Avalanche</option>
+                <option value="solana">Solana Mainnet</option>
+                <option value="cardano">Cardano</option>
                 <option value="litecoin">Litecoin</option>
-                <option value="monero">Monero</option>
+                <option value="dogecoin">Dogecoin</option>
+                <option value="dash">Dash</option>
+                <option value="ethereum-classic">Ethereum Classic</option>
+                <option value="ethereum-pow">Ethereum PoW</option>
+                <option value="zcash">ZCash</option>
+                <option value="bitcoin-cash">Bitcoin Cash</option>
+                <option value="bitcoin-sv">Bitcoin SV</option>
+                <option value="algorand">Algorand Mainnet</option>
+                <option value="binance-dex">Binance DEX</option>
+                <option value="celo">Celo Mainnet</option>
+                <option value="conflux">Conflux Hydra</option>
+                <option value="hedera">Hedera Hashgraph</option>
+                <option value="eos">EOS Mainnet</option>
+                <option value="tron">TRON Mainnet</option>
+                <option value="beacon-chain">Beacon Chain Ethereum 2.0</option>
+                <option value="optimism">Optimism</option>
+                <option value="fantom">Fantom</option>
+                <option value="cronos">Cronos</option>
+                <option value="near">NEAR Protocol</option>
+                <option value="harmony">Harmony</option>
+                <option value="moonbeam">Moonbeam</option>
+                <option value="moonriver">Moonriver</option>
+                <option value="kusama">Kusama</option>
+                <option value="polkadot">Polkadot</option>
+                <option value="cosmos">Cosmos Hub</option>
+                <option value="osmosis">Osmosis</option>
+                <option value="terra">Terra</option>
+                <option value="thorchain">THORChain</option>
+                <option value="klaytn">Klaytn</option>
+                <option value="zilliqa">Zilliqa</option>
+                <option value="waves">Waves</option>
+                <option value="stellar">Stellar</option>
               </select>
             </div>
           </div>
