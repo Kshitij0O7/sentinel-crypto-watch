@@ -27,7 +27,6 @@ interface Transaction {
   currency: string;
   timestamp: string;
   status: 'pending' | 'confirmed' | 'failed';
-  risk: 'low' | 'medium' | 'high';
 }
 
 const MonitoringDashboard = () => {
@@ -68,8 +67,7 @@ const MonitoringDashboard = () => {
       amount: "0.0001",
       currency: "BTC",
       timestamp: "2024-01-20 14:23:15",
-      status: "confirmed",
-      risk: "high"
+      status: "confirmed"
     },
     {
       id: "2",
@@ -79,8 +77,7 @@ const MonitoringDashboard = () => {
       amount: "0.5",
       currency: "ETH", 
       timestamp: "2024-01-19 09:15:42",
-      status: "confirmed",
-      risk: "medium"
+      status: "confirmed"
     }
   ]);
 
@@ -103,14 +100,6 @@ const MonitoringDashboard = () => {
     setNewCaseId("");
   };
 
-  const getRiskBadgeVariant = (risk: string) => {
-    switch (risk) {
-      case 'high': return 'destructive';
-      case 'medium': return 'outline';
-      case 'low': return 'secondary';
-      default: return 'secondary';
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -144,13 +133,13 @@ const MonitoringDashboard = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">High Risk Alerts</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-destructive" />
+            <CardTitle className="text-sm font-medium">Active Cases</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">1</div>
+            <div className="text-2xl font-bold">2</div>
             <p className="text-xs text-muted-foreground">
-              Requires attention
+              Under investigation
             </p>
           </CardContent>
         </Card>
@@ -281,9 +270,6 @@ const MonitoringDashboard = () => {
               >
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Badge variant={getRiskBadgeVariant(tx.risk)}>
-                      {tx.risk.toUpperCase()} RISK
-                    </Badge>
                     <Badge variant="outline">{tx.currency}</Badge>
                     <Badge variant={tx.status === 'confirmed' ? 'default' : 'secondary'}>
                       {tx.status}
@@ -300,9 +286,6 @@ const MonitoringDashboard = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 mt-4 md:mt-0">
-                  {tx.risk === 'high' && (
-                    <AlertTriangle className="h-5 w-5 text-destructive" />
-                  )}
                   <Button variant="outline" size="sm">
                     Investigate
                   </Button>
