@@ -170,9 +170,13 @@ const MonitoringDashboard = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$45,231</div>
+            <div className="space-y-1">
+              <div className="text-lg font-bold">0.5842 BTC</div>
+              <div className="text-lg font-bold">15.2341 ETH</div>
+              <div className="text-lg font-bold">1,250 USDT</div>
+            </div>
             <p className="text-xs text-muted-foreground">
-              USD equivalent
+              Seized crypto assets
             </p>
           </CardContent>
         </Card>
