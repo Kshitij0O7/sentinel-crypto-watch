@@ -14,50 +14,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-interface Transaction {
-  id: string;
-  hash: string;
-  from: string;
-  to: string;
-  amount: string;
-  currency: string;
-  timestamp: string;
-  status: 'pending' | 'confirmed' | 'failed';
-  blockHeight?: number;
-  gasUsed?: string;
-}
-
-interface TokenHolding {
-  symbol: string;
-  name: string;
-  balance: string;
-  value: string;
-  contractAddress?: string;
-  decimals?: number;
-}
-
-interface WalletDetails {
-  id: string;
-  address: string;
-  blockchain: string;
-  caseId: string;
-  dateSeized: string;
-  status: 'active' | 'inactive';
-  lastActivity?: string;
-  balance: string;
-  totalTransactions: number;
-  firstSeen: string;
-  lastSeen: string;
-  tags: string[];
-}
-
 const WalletDetails = () => {
   const { walletId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   // Mock data - in real app this would be fetched based on walletId
-  const walletDetails: WalletDetails = {
+  const walletDetails = {
     id: walletId || "1",
     address: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
     blockchain: "Bitcoin",
@@ -72,7 +35,7 @@ const WalletDetails = () => {
     tags: ["High Priority", "Investigation Active"]
   };
 
-  const transactions: Transaction[] = [
+  const transactions = [
     {
       id: "1",
       hash: "abc123def456ghi789jkl012mno345pqr678stu901vwx234yz567",
@@ -111,7 +74,7 @@ const WalletDetails = () => {
   ];
 
   // Mock token holdings data
-  const tokenHoldings: TokenHolding[] = [
+  const tokenHoldings = [
     {
       symbol: "BTC",
       name: "Bitcoin",
@@ -144,7 +107,7 @@ const WalletDetails = () => {
     }
   ];
 
-  const copyToClipboard = (text: string) => {
+  const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     toast({
       title: "Copied",
@@ -280,7 +243,7 @@ const WalletDetails = () => {
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              copyToClipboard(token.contractAddress!);
+                              copyToClipboard(token.contractAddress);
                             }}
                             className="h-6 px-2"
                           >

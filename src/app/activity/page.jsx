@@ -8,27 +8,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Clock, Search, ExternalLink, Activity, AlertCircle, CheckCircle, Loader } from "lucide-react";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
 
-interface Transaction {
-  id: string;
-  hash: string;
-  from: string;
-  to: string;
-  amount: string;
-  currency: string;
-  timestamp: string;
-  status: 'pending' | 'confirmed' | 'failed';
-  blockHeight?: number;
-  gasUsed?: string;
-  transactionFee?: string;
-  caseId?: string;
-}
-
 const RecentActivity = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
 
   // Mock data for recent transactions
-  const [transactions] = useState<Transaction[]>([
+  const [transactions] = useState([
     {
       id: "1",
       hash: "0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f",
@@ -104,7 +89,7 @@ const RecentActivity = () => {
     tx.currency.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status) => {
     switch (status) {
       case 'confirmed':
         return <CheckCircle className="h-4 w-4 text-green-600" />;
@@ -117,7 +102,7 @@ const RecentActivity = () => {
     }
   };
 
-  const getStatusVariant = (status: string) => {
+  const getStatusVariant = (status) => {
     switch (status) {
       case 'confirmed':
         return 'default';
@@ -130,11 +115,11 @@ const RecentActivity = () => {
     }
   };
 
-  const truncateAddress = (address: string) => {
+  const truncateAddress = (address) => {
     return `${address.slice(0, 6)}...${address.slice(-6)}`;
   };
 
-  const truncateHash = (hash: string) => {
+  const truncateHash = (hash) => {
     return `${hash.slice(0, 10)}...${hash.slice(-10)}`;
   };
 

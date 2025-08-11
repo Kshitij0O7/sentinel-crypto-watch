@@ -9,31 +9,6 @@ import { Plus, Bell, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
 
-interface CaseData {
-  id: string;
-  name: string;
-  caseId: string;
-  description: string;
-  createdDate: string;
-  addresses: AddressData[];
-  alertGroupId?: string;
-}
-
-interface AlertGroup {
-  id: string;
-  name: string;
-  emails: string[];
-  createdDate: string;
-}
-
-interface AddressData {
-  id: string;
-  address: string;
-  blockchain: string;
-  privateLabel?: string;
-  dateSeized: string;
-}
-
 const NewCase = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -55,7 +30,7 @@ const NewCase = () => {
   });
 
   // Mock data for alert groups (in real app, this would come from a store/context)
-  const [alertGroups, setAlertGroups] = useState<AlertGroup[]>([
+  const [alertGroups, setAlertGroups] = useState([
     {
       id: "1",
       name: "Primary Investigation Team",
@@ -98,7 +73,7 @@ const NewCase = () => {
       dateSeized: new Date().toISOString().split('T')[0]
     }] : [];
 
-    const caseData: CaseData = {
+    const caseData = {
       id: Date.now().toString(),
       name: newCase.name,
       caseId: newCase.caseId,
@@ -130,7 +105,7 @@ const NewCase = () => {
       return;
     }
 
-    const alertGroupData: AlertGroup = {
+    const alertGroupData = {
       id: Date.now().toString(),
       name: newAlertGroup.name,
       emails: [newAlertGroup.email],

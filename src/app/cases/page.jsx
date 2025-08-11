@@ -10,46 +10,6 @@ import { Plus, Mail, ArrowLeft, Calendar, AlertTriangle, X, Trash2 } from "lucid
 import { useToast } from "@/hooks/use-toast";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
 
-interface CaseData {
-  id: string;
-  name: string;
-  caseId: string;
-  description: string;
-  createdDate: string;
-  dateAdded: string;
-  addresses: AddressData[];
-  alertGroupId?: string;
-}
-
-interface AlertGroup {
-  id: string;
-  name: string;
-  emails: string[];
-  createdDate: string;
-}
-
-interface Alert {
-  id: string;
-  groupId: string;
-  address: string;
-  caseId: string;
-  transactionHash: string;
-  amount: string;
-  currency: string;
-  direction: "in" | "out";
-  timestamp: string;
-  status: "new" | "acknowledged" | "resolved";
-}
-
-interface AddressData {
-  id: string;
-  address: string;
-  blockchain: string;
-  privateLabel?: string;
-  dateSeized: string;
-  dateAdded: string;
-}
-
 const ManageCases = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -62,12 +22,12 @@ const ManageCases = () => {
     dateSeized: ""
   });
 
-  const [selectedCaseId, setSelectedCaseId] = useState<string>("");
+  const [selectedCaseId, setSelectedCaseId] = useState("");
   const [showAddressForm, setShowAddressForm] = useState(false);
-  const [selectedAlertGroupId, setSelectedAlertGroupId] = useState<string>("");
+  const [selectedAlertGroupId, setSelectedAlertGroupId] = useState("");
 
   // Mock data for alert groups
-  const [alertGroups, setAlertGroups] = useState<AlertGroup[]>([
+  const [alertGroups, setAlertGroups] = useState([
     {
       id: "1",
       name: "Primary Investigation Team",
@@ -83,7 +43,7 @@ const ManageCases = () => {
   ]);
 
   // Mock data for alerts
-  const [alerts, setAlerts] = useState<Alert[]>([
+  const [alerts, setAlerts] = useState([
     {
       id: "1",
       groupId: "1",
@@ -123,7 +83,7 @@ const ManageCases = () => {
   ]);
 
   // Mock data for cases
-  const [cases, setCases] = useState<CaseData[]>([
+  const [cases, setCases] = useState([
     {
       id: "1",
       name: "Crypto Fraud Investigation Alpha",
@@ -172,7 +132,7 @@ const ManageCases = () => {
     "Klaytn", "Zilliqa", "Waves", "Stellar"
   ];
 
-  const handleAddEmailToGroup = (groupId: string, email: string) => {
+  const handleAddEmailToGroup = (groupId, email) => {
     if (!email || !email.includes('@')) {
       toast({
         title: "Error",
@@ -194,7 +154,7 @@ const ManageCases = () => {
     });
   };
 
-  const handleRemoveEmailFromGroup = (groupId: string, emailToRemove: string) => {
+  const handleRemoveEmailFromGroup = (groupId, emailToRemove) => {
     setAlertGroups(alertGroups.map(group => 
       group.id === groupId
         ? { ...group, emails: group.emails.filter(email => email !== emailToRemove) }
@@ -217,7 +177,7 @@ const ManageCases = () => {
       return;
     }
 
-    const addressData: AddressData = {
+    const addressData = {
       id: Date.now().toString(),
       address: newAddress.address,
       blockchain: newAddress.blockchain,
@@ -242,7 +202,7 @@ const ManageCases = () => {
     });
   };
 
-  const handleDeleteCase = (caseId: string) => {
+  const handleDeleteCase = (caseId) => {
     const caseToDelete = cases.find(c => c.id === caseId);
     setCases(cases.filter(c => c.id !== caseId));
     
@@ -252,7 +212,7 @@ const ManageCases = () => {
     });
   };
 
-  const handleDeleteAddress = (caseId: string, addressId: string) => {
+  const handleDeleteAddress = (caseId, addressId) => {
     setCases(cases.map(case_ => 
       case_.id === caseId
         ? { ...case_, addresses: case_.addresses.filter(addr => addr.id !== addressId) }
@@ -265,7 +225,7 @@ const ManageCases = () => {
     });
   };
 
-  const handleDeleteAlertGroup = (groupId: string) => {
+  const handleDeleteAlertGroup = (groupId) => {
     const groupToDelete = alertGroups.find(g => g.id === groupId);
     setAlertGroups(alertGroups.filter(g => g.id !== groupId));
     
@@ -282,11 +242,11 @@ const ManageCases = () => {
     });
   };
 
-  const getAlertsForGroup = (groupId: string): Alert[] => {
+  const getAlertsForGroup = (groupId) => {
     return alerts.filter(alert => alert.groupId === groupId);
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status) => {
     switch (status) {
       case 'new':
         return 'destructive';
@@ -482,18 +442,20 @@ const ManageCases = () => {
                                       <Badge variant="secondary">{address.privateLabel}</Badge>
                                     )}
                                   </div>
-                                  <p className="font-mono text-sm">{address.address}</p>
+                                  <code className="text-xs bg-background/50 px-2 py-1 rounded break-all">
+                                    {address.address}
+                                  </code>
                                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                                     <span>Seized: {address.dateSeized}</span>
-                                    <span>Added to System: {address.dateAdded}</span>
+                                    <span>Added: {address.dateAdded}</span>
                                   </div>
                                 </div>
-                                 <AlertDialog>
-                                   <AlertDialogTrigger asChild>
-                                     <Button variant="danger" size="sm">
-                                       <Trash2 className="h-4 w-4" />
-                                     </Button>
-                                   </AlertDialogTrigger>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
                                   <AlertDialogContent>
                                     <AlertDialogHeader>
                                       <AlertDialogTitle>Delete Address</AlertDialogTitle>
@@ -501,12 +463,12 @@ const ManageCases = () => {
                                         Are you sure you want to remove this address from the case? This action cannot be undone.
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
-                                     <AlertDialogFooter>
-                                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                       <AlertDialogAction onClick={() => handleDeleteAddress(case_.id, address.id)} className="bg-danger text-danger-foreground hover:bg-danger-hover">
-                                         Delete
-                                       </AlertDialogAction>
-                                     </AlertDialogFooter>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDeleteAddress(case_.id, address.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
                                   </AlertDialogContent>
                                 </AlertDialog>
                               </div>
@@ -521,7 +483,7 @@ const ManageCases = () => {
             </CardContent>
           </Card>
 
-          {/* Manage Alert Groups */}
+          {/* Alert Groups Management */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -529,137 +491,123 @@ const ManageCases = () => {
                 Alert Groups
               </CardTitle>
               <CardDescription>
-                Manage email notification groups and view alerts
+                Manage notification groups and view alert history
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {alertGroups.map((group) => {
-                  const groupAlerts = getAlertsForGroup(group.id);
-                  return (
-                    <div key={group.id} className="border rounded-lg p-4 space-y-4">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-lg font-semibold">{group.name}</h3>
-                            <Badge variant="outline">{group.emails.length} emails</Badge>
-                            <Badge variant="secondary">{groupAlerts.length} alerts</Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground">Created: {group.createdDate}</p>
+                {alertGroups.map((group) => (
+                  <div key={group.id} className="border rounded-lg p-4 space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-lg font-semibold">{group.name}</h3>
+                          <Badge variant="outline">{group.emails.length} emails</Badge>
+                          <Badge variant="secondary">{getAlertsForGroup(group.id).length} alerts</Badge>
                         </div>
-                         <AlertDialog>
-                           <AlertDialogTrigger asChild>
-                             <Button variant="danger" size="sm" className="flex items-center gap-2">
-                               <Trash2 className="h-4 w-4" />
-                               Delete Group
-                             </Button>
-                           </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Alert Group</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete "{group.name}"? This action cannot be undone and will remove the group from any associated cases.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                             <AlertDialogFooter>
-                               <AlertDialogCancel>Cancel</AlertDialogCancel>
-                               <AlertDialogAction onClick={() => handleDeleteAlertGroup(group.id)} className="bg-danger text-danger-foreground hover:bg-danger-hover">
-                                 Delete
-                               </AlertDialogAction>
-                             </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                        <div className="text-sm text-muted-foreground">
+                          Created: {group.createdDate}
+                        </div>
                       </div>
-
-                      {/* Email Management */}
-                      <div className="space-y-3">
-                        <h4 className="font-medium">Email Addresses:</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {group.emails.map((email, index) => (
-                            <div key={index} className="flex items-center gap-2 bg-accent/50 px-3 py-1 rounded-md">
-                              <span className="text-sm">{email}</span>
-                              {group.emails.length > 1 && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                                  onClick={() => handleRemoveEmailFromGroup(group.id, email)}
-                                >
-                                  <X className="h-3 w-3" />
-                                </Button>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                        
-                        {/* Add new email */}
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="Add new email..."
-                            onKeyPress={(e) => {
-                              if (e.key === 'Enter') {
-                                const input = e.target as HTMLInputElement;
-                                handleAddEmailToGroup(group.id, input.value);
-                                input.value = '';
-                              }
-                            }}
-                          />
-                          <Button
-                            variant="outline"
-                            onClick={(e) => {
-                              const input = (e.currentTarget.previousElementSibling as HTMLInputElement);
-                              handleAddEmailToGroup(group.id, input.value);
-                              input.value = '';
-                            }}
-                          >
-                            Add
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
                           </Button>
-                        </div>
-                      </div>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Alert Group</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{group.name}"? This action cannot be undone and will remove all associated alerts.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDeleteAlertGroup(group.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
 
-                      {/* Recent Alerts */}
-                      <div className="space-y-3">
-                        <h4 className="font-medium">Recent Alerts:</h4>
-                        {groupAlerts.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">No alerts yet</p>
-                        ) : (
-                          <div className="space-y-2">
-                            {groupAlerts.map((alert) => (
-                              <div key={alert.id} className="bg-accent/30 p-3 rounded-md">
-                                <div className="flex items-start justify-between">
-                                  <div className="space-y-1">
-                                    <div className="flex items-center gap-2">
-                                      <Badge variant={getStatusColor(alert.status)}>
-                                        {alert.status}
-                                      </Badge>
-                                      <Badge variant="outline">{alert.currency}</Badge>
-                                      <Badge variant={alert.direction === 'in' ? 'default' : 'destructive'}>
-                                        {alert.direction.toUpperCase()}
-                                      </Badge>
-                                    </div>
-                                    <p className="text-sm">
-                                      <span className="font-medium">Address:</span> {alert.address}
-                                    </p>
-                                    <p className="text-sm">
-                                      <span className="font-medium">Case:</span> {alert.caseId}
-                                    </p>
-                                    <p className="text-sm">
-                                      <span className="font-medium">Amount:</span> {alert.amount} {alert.currency}
-                                    </p>
-                                    <p className="text-sm">
-                                      <span className="font-medium">Hash:</span> {alert.transactionHash}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">{alert.timestamp}</p>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
+                    {/* Email List */}
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Email Recipients:</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {group.emails.map((email, emailIndex) => (
+                          <div key={emailIndex} className="flex items-center gap-1 bg-accent/30 px-2 py-1 rounded">
+                            <span className="text-xs">{email}</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-4 w-4 p-0 text-destructive hover:text-destructive"
+                              onClick={() => handleRemoveEmailFromGroup(group.id, email)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
                           </div>
+                        ))}
+                      </div>
+                      
+                      {/* Add Email Form */}
+                      <div className="flex gap-2 mt-2">
+                        <Input
+                          type="email"
+                          placeholder="Add email address..."
+                          className="flex-1"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              const target = e.target;
+                              handleAddEmailToGroup(group.id, target.value);
+                              target.value = '';
+                            }
+                          }}
+                        />
+                        <Button
+                          size="sm"
+                          onClick={(e) => {
+                            const input = e.currentTarget.previousElementSibling;
+                            handleAddEmailToGroup(group.id, input.value);
+                            input.value = '';
+                          }}
+                        >
+                          Add
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Recent Alerts */}
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Recent Alerts:</h4>
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {getAlertsForGroup(group.id).map((alert) => (
+                          <div key={alert.id} className="bg-background/50 p-2 rounded text-xs space-y-1">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Badge variant={getStatusColor(alert.status)} className="text-xs">
+                                  {alert.status}
+                                </Badge>
+                                <Badge variant="outline" className="text-xs">{alert.currency}</Badge>
+                                <span className="font-medium">{alert.amount} {alert.currency}</span>
+                              </div>
+                              <span className="text-muted-foreground">{alert.timestamp}</span>
+                            </div>
+                            <div className="text-muted-foreground">
+                              <div>Case: {alert.caseId}</div>
+                              <div>Address: {alert.address.slice(0, 10)}...{alert.address.slice(-6)}</div>
+                              <div>Direction: {alert.direction}</div>
+                            </div>
+                          </div>
+                        ))}
+                        {getAlertsForGroup(group.id).length === 0 && (
+                          <p className="text-xs text-muted-foreground text-center py-2">No alerts yet</p>
                         )}
                       </div>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
