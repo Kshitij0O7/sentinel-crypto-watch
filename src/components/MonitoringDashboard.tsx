@@ -154,7 +154,7 @@ const MonitoringDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => navigate("/cases")}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Cases</CardTitle>
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
@@ -162,7 +162,7 @@ const MonitoringDashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold">2</div>
             <p className="text-xs text-muted-foreground">
-              Under investigation
+              Click to manage cases
             </p>
           </CardContent>
         </Card>
