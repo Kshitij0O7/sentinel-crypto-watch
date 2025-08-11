@@ -96,7 +96,7 @@ const MonitoringDashboard = () => {
 
   const handleCaseChange = (value: string) => {
     if (value === "new-case") {
-      navigate("/cases");
+      navigate("/new-case");
       return;
     }
     setSelectedCase(value);
