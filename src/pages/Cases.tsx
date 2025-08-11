@@ -18,6 +18,7 @@ interface CaseData {
   description: string;
   createdDate: string;
   addresses: AddressData[];
+  alertGroupId?: string;
 }
 
 interface AlertGroup {
@@ -58,7 +59,8 @@ const Cases = () => {
     caseId: "",
     description: "",
     address: "",
-    blockchain: "Bitcoin"
+    blockchain: "Bitcoin",
+    alertGroupId: ""
   });
 
   // Form states for new alert group
@@ -204,11 +206,12 @@ const Cases = () => {
       caseId: newCase.caseId,
       description: newCase.description,
       createdDate: new Date().toISOString().split('T')[0],
-      addresses
+      addresses,
+      alertGroupId: newCase.alertGroupId || undefined
     };
 
     setCases([...cases, caseData]);
-    setNewCase({ name: "", caseId: "", description: "", address: "", blockchain: "Bitcoin" });
+    setNewCase({ name: "", caseId: "", description: "", address: "", blockchain: "Bitcoin", alertGroupId: "" });
     
     toast({
       title: "Case Created",
@@ -392,6 +395,24 @@ const Cases = () => {
                   ))}
                 </select>
               </div>
+            </div>
+
+            {/* Alert Group Association */}
+            <div className="space-y-2">
+              <Label htmlFor="alertGroupSelect">Alert Group</Label>
+              <select
+                id="alertGroupSelect"
+                className="w-full px-3 py-2 border border-input bg-background rounded-md text-foreground z-50"
+                value={newCase.alertGroupId}
+                onChange={(e) => setNewCase({ ...newCase, alertGroupId: e.target.value })}
+              >
+                <option value="">No alert group</option>
+                {alertGroups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Case Description - Optional */}
@@ -682,6 +703,11 @@ const Cases = () => {
                       <div className="flex items-center gap-2">
                         <Badge variant="outline">{case_.caseId}</Badge>
                         <Badge variant="secondary">{case_.addresses.length} addresses</Badge>
+                        {case_.alertGroupId && (
+                          <Badge variant="default">
+                            {alertGroups.find(g => g.id === case_.alertGroupId)?.name || "Alert Group"}
+                          </Badge>
+                        )}
                       </div>
                       <h3 className="text-lg font-semibold">{case_.name}</h3>
                       <p className="text-sm text-muted-foreground">{case_.description}</p>
