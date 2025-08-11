@@ -235,19 +235,29 @@ const WalletDetails = () => {
           </CardContent>
         </Card>
 
-        {/* Token Holdings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <Coins className="h-5 w-5" />
-                Token Holdings
-              </span>
+
+        {/* Activity Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{walletDetails.totalTransactions}</div>
+              <p className="text-xs text-muted-foreground">
+                Since monitoring started
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Token Holdings</CardTitle>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="flex items-center gap-2">
-                    View All Tokens
-                    <ChevronDown className="h-4 w-4" />
+                  <Button variant="ghost" size="sm">
+                    <Coins className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-80">
@@ -287,52 +297,11 @@ const WalletDetails = () => {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-            </CardTitle>
-            <CardDescription>
-              Digital assets held in this wallet address
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {tokenHoldings.slice(0, 4).map((token, index) => (
-                <div key={index} className="text-center space-y-2">
-                  <Badge variant="outline" className="w-full justify-center">
-                    {token.symbol}
-                  </Badge>
-                  <div>
-                    <p className="text-sm font-medium">{token.balance}</p>
-                    <p className="text-xs text-muted-foreground">{token.value}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Activity Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{walletDetails.totalTransactions}</div>
+              <div className="text-2xl font-bold">{tokenHoldings.length}</div>
               <p className="text-xs text-muted-foreground">
-                Since monitoring started
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{walletDetails.balance}</div>
-              <p className="text-xs text-muted-foreground">
-                Last updated today
+                Digital assets held
               </p>
             </CardContent>
           </Card>
