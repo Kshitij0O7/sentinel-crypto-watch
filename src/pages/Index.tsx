@@ -17,14 +17,6 @@ const Index = () => {
             <p className="text-muted-foreground">Overview of seized crypto assets and recent activity</p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => navigate("/activity")} variant="outline" className="flex items-center gap-2">
-              <Activity className="h-4 w-4" />
-              Recent Activity
-            </Button>
-            <Button onClick={() => navigate("/wallets")} variant="outline" className="flex items-center gap-2">
-              <Eye className="h-4 w-4" />
-              View All Wallets
-            </Button>
             <Button onClick={() => navigate("/new-case")} className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
               New Case
