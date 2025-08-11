@@ -182,7 +182,7 @@ const Cases = () => {
   ];
 
   const handleCreateCase = () => {
-    if (!newCase.name || !newCase.caseId || !newCase.description) {
+    if (!newCase.name || !newCase.caseId) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
@@ -365,8 +365,41 @@ const Cases = () => {
                 />
               </div>
             </div>
+            
+            {/* Address Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="caseAddress">Wallet Address</Label>
+                <Input
+                  id="caseAddress"
+                  placeholder="Enter wallet address..."
+                  value={newCase.address}
+                  onChange={(e) => setNewCase({ ...newCase, address: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="caseBlockchain">Blockchain</Label>
+                <select
+                  id="caseBlockchain"
+                  className="w-full px-3 py-2 border border-input bg-background rounded-md text-foreground z-50"
+                  value={newCase.blockchain}
+                  onChange={(e) => setNewCase({ ...newCase, blockchain: e.target.value })}
+                >
+                  {blockchainOptions.map((blockchain) => (
+                    <option key={blockchain} value={blockchain}>
+                      {blockchain}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Case Description - Optional */}
             <div className="space-y-2">
-              <Label htmlFor="caseDescription">Case Description *</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="caseDescription">Case Description</Label>
+                <span className="text-sm text-muted-foreground">(Optional)</span>
+              </div>
               <Textarea
                 id="caseDescription"
                 placeholder="Enter detailed case description..."
@@ -374,37 +407,6 @@ const Cases = () => {
                 onChange={(e) => setNewCase({ ...newCase, description: e.target.value })}
                 rows={3}
               />
-            </div>
-            
-            {/* Optional Address Section */}
-            <div className="border-t pt-4 space-y-4">
-              <h4 className="font-medium text-sm text-muted-foreground">Initial Address (Optional)</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="caseAddress">Wallet Address</Label>
-                  <Input
-                    id="caseAddress"
-                    placeholder="Enter wallet address (optional)..."
-                    value={newCase.address}
-                    onChange={(e) => setNewCase({ ...newCase, address: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="caseBlockchain">Blockchain</Label>
-                  <select
-                    id="caseBlockchain"
-                    className="w-full px-3 py-2 border border-input bg-background rounded-md text-foreground z-50"
-                    value={newCase.blockchain}
-                    onChange={(e) => setNewCase({ ...newCase, blockchain: e.target.value })}
-                  >
-                    {blockchainOptions.map((blockchain) => (
-                      <option key={blockchain} value={blockchain}>
-                        {blockchain}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
             </div>
             
             <Button onClick={handleCreateCase} className="w-full md:w-auto">
