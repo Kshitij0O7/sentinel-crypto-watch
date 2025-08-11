@@ -2,9 +2,17 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Activity, DollarSign, Clock, AlertTriangle, Copy } from "lucide-react";
+import { ArrowLeft, Activity, DollarSign, Clock, AlertTriangle, Copy, ChevronDown, Coins } from "lucide-react";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
 import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Transaction {
   id: string;
@@ -17,6 +25,15 @@ interface Transaction {
   status: 'pending' | 'confirmed' | 'failed';
   blockHeight?: number;
   gasUsed?: string;
+}
+
+interface TokenHolding {
+  symbol: string;
+  name: string;
+  balance: string;
+  value: string;
+  contractAddress?: string;
+  decimals?: number;
 }
 
 interface WalletDetails {
@@ -90,6 +107,40 @@ const WalletDetails = () => {
       timestamp: "2024-01-18 16:45:21",
       status: "confirmed",
       blockHeight: 825067
+    }
+  ];
+
+  // Mock token holdings data
+  const tokenHoldings: TokenHolding[] = [
+    {
+      symbol: "BTC",
+      name: "Bitcoin",
+      balance: "0.5842",
+      value: "$25,423.15",
+    },
+    {
+      symbol: "ETH",
+      name: "Ethereum",
+      balance: "2.456",
+      value: "$5,234.67",
+      contractAddress: "0xa0b86a33e6ec92d0fb3fb5b5c0c1d8f9c3a6e7d4",
+      decimals: 18
+    },
+    {
+      symbol: "USDT",
+      name: "Tether",
+      balance: "1,250.00",
+      value: "$1,250.00",
+      contractAddress: "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      decimals: 6
+    },
+    {
+      symbol: "USDC",
+      name: "USD Coin",
+      balance: "875.50",
+      value: "$875.50",
+      contractAddress: "0xa0b86a33e6ec92d0fb3fb5b5c0c1d8f9c3a6e7d4",
+      decimals: 6
     }
   ];
 
@@ -180,6 +231,80 @@ const WalletDetails = () => {
                   <p className="mt-1">{walletDetails.lastActivity || 'No recent activity'}</p>
                 </div>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Token Holdings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <Coins className="h-5 w-5" />
+                Token Holdings
+              </span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="flex items-center gap-2">
+                    View All Tokens
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <DropdownMenuLabel>Token Holdings</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {tokenHoldings.map((token, index) => (
+                    <DropdownMenuItem key={index} className="flex-col items-start space-y-1 p-4">
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">{token.symbol}</Badge>
+                          <span className="font-medium">{token.name}</span>
+                        </div>
+                        <span className="text-sm font-semibold text-primary">{token.value}</span>
+                      </div>
+                      <div className="flex items-center justify-between w-full text-sm text-muted-foreground">
+                        <span>Balance: {token.balance} {token.symbol}</span>
+                        {token.contractAddress && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyToClipboard(token.contractAddress!);
+                            }}
+                            className="h-6 px-2"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                      {token.contractAddress && (
+                        <code className="text-xs bg-accent/50 px-2 py-1 rounded break-all w-full block">
+                          {token.contractAddress}
+                        </code>
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </CardTitle>
+            <CardDescription>
+              Digital assets held in this wallet address
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {tokenHoldings.slice(0, 4).map((token, index) => (
+                <div key={index} className="text-center space-y-2">
+                  <Badge variant="outline" className="w-full justify-center">
+                    {token.symbol}
+                  </Badge>
+                  <div>
+                    <p className="text-sm font-medium">{token.balance}</p>
+                    <p className="text-xs text-muted-foreground">{token.value}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
