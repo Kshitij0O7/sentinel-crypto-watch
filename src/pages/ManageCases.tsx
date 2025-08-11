@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Mail, ArrowLeft, Calendar, AlertTriangle, X } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Plus, Mail, ArrowLeft, Calendar, AlertTriangle, X, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
 
@@ -234,6 +235,46 @@ const ManageCases = () => {
     });
   };
 
+  const handleDeleteCase = (caseId: string) => {
+    const caseToDelete = cases.find(c => c.id === caseId);
+    setCases(cases.filter(c => c.id !== caseId));
+    
+    toast({
+      title: "Case Deleted",
+      description: `Case "${caseToDelete?.name}" has been deleted successfully`,
+    });
+  };
+
+  const handleDeleteAddress = (caseId: string, addressId: string) => {
+    setCases(cases.map(case_ => 
+      case_.id === caseId
+        ? { ...case_, addresses: case_.addresses.filter(addr => addr.id !== addressId) }
+        : case_
+    ));
+    
+    toast({
+      title: "Address Deleted",
+      description: "Address has been removed from the case",
+    });
+  };
+
+  const handleDeleteAlertGroup = (groupId: string) => {
+    const groupToDelete = alertGroups.find(g => g.id === groupId);
+    setAlertGroups(alertGroups.filter(g => g.id !== groupId));
+    
+    // Remove alert group association from cases
+    setCases(cases.map(case_ => 
+      case_.alertGroupId === groupId
+        ? { ...case_, alertGroupId: undefined }
+        : case_
+    ));
+    
+    toast({
+      title: "Alert Group Deleted",
+      description: `Alert group "${groupToDelete?.name}" has been deleted successfully`,
+    });
+  };
+
   const getAlertsForGroup = (groupId: string): Alert[] => {
     return alerts.filter(alert => alert.groupId === groupId);
   };
@@ -389,6 +430,28 @@ const ManageCases = () => {
                           Created: {case_.createdDate}
                         </div>
                       </div>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="sm" className="flex items-center gap-2">
+                            <Trash2 className="h-4 w-4" />
+                            Delete Case
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Case</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{case_.name}"? This action cannot be undone and will remove all associated addresses.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDeleteCase(case_.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
 
                     {/* Addresses */}
@@ -411,6 +474,27 @@ const ManageCases = () => {
                                     Seized: {address.dateSeized}
                                   </p>
                                 </div>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" size="sm">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Address</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to remove this address from the case? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDeleteAddress(case_.id, address.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
                               </div>
                             </div>
                           ))}
@@ -449,6 +533,28 @@ const ManageCases = () => {
                           </div>
                           <p className="text-sm text-muted-foreground">Created: {group.createdDate}</p>
                         </div>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm" className="flex items-center gap-2">
+                              <Trash2 className="h-4 w-4" />
+                              Delete Group
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Alert Group</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete "{group.name}"? This action cannot be undone and will remove the group from any associated cases.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteAlertGroup(group.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
 
                       {/* Email Management */}
