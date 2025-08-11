@@ -34,8 +34,16 @@ const MonitoringDashboard = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [newAddress, setNewAddress] = useState("");
-  const [newCaseId, setNewCaseId] = useState("");
+  const [selectedCase, setSelectedCase] = useState("");
   const [selectedBlockchain, setSelectedBlockchain] = useState("bitcoin");
+  
+  // Mock existing cases data
+  const existingCases = [
+    { id: "1", name: "Silk Road Investigation" },
+    { id: "2", name: "Ransomware Group Alpha" },
+    { id: "3", name: "Money Laundering Operation" },
+    { id: "4", name: "Crypto Exchange Fraud" }
+  ];
 
   // Mock data for demonstration
   const [walletAddresses] = useState<WalletAddress[]>([
@@ -84,7 +92,7 @@ const MonitoringDashboard = () => {
   ]);
 
   const handleAddWallet = () => {
-    if (!newAddress || !newCaseId) {
+    if (!newAddress || !selectedCase) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
@@ -93,13 +101,21 @@ const MonitoringDashboard = () => {
       return;
     }
 
+    if (selectedCase === "new-case") {
+      // Redirect to cases page to create new case
+      navigate("/cases");
+      return;
+    }
+
+    const caseName = existingCases.find(c => c.id === selectedCase)?.name || selectedCase;
+    
     toast({
       title: "Wallet Added",
-      description: `Wallet address added to monitoring system for case ${newCaseId}`,
+      description: `Wallet address added to monitoring system for case: ${caseName}`,
     });
 
     setNewAddress("");
-    setNewCaseId("");
+    setSelectedCase("");
   };
 
 
@@ -183,13 +199,21 @@ const MonitoringDashboard = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="caseId">Case Name</Label>
-              <Input
-                id="caseId"
-                placeholder="Enter case name..."
-                value={newCaseId}
-                onChange={(e) => setNewCaseId(e.target.value)}
-              />
+              <Label htmlFor="caseSelect">Case Name</Label>
+              <select
+                id="caseSelect"
+                className="w-full px-3 py-2 border border-input bg-background rounded-md text-foreground z-50"
+                value={selectedCase}
+                onChange={(e) => setSelectedCase(e.target.value)}
+              >
+                <option value="">Select a case...</option>
+                <option value="new-case" className="font-medium">+ New Case</option>
+                {existingCases.map((case_) => (
+                  <option key={case_.id} value={case_.id}>
+                    {case_.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="blockchain">Blockchain</Label>
