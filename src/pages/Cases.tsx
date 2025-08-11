@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Plus, FolderOpen, Calendar, MapPin, ArrowLeft } from "lucide-react";
+import { Plus, FolderOpen, Calendar, MapPin, ArrowLeft, Bell, Mail, X, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
@@ -18,6 +18,26 @@ interface CaseData {
   description: string;
   createdDate: string;
   addresses: AddressData[];
+}
+
+interface AlertGroup {
+  id: string;
+  name: string;
+  emails: string[];
+  createdDate: string;
+}
+
+interface Alert {
+  id: string;
+  groupId: string;
+  address: string;
+  caseId: string;
+  transactionHash: string;
+  amount: string;
+  currency: string;
+  direction: 'in' | 'out';
+  timestamp: string;
+  status: 'new' | 'acknowledged' | 'resolved';
 }
 
 interface AddressData {
@@ -39,6 +59,12 @@ const Cases = () => {
     description: ""
   });
 
+  // Form states for new alert group
+  const [newAlertGroup, setNewAlertGroup] = useState({
+    name: "",
+    email: ""
+  });
+
   // Form states for new address
   const [newAddress, setNewAddress] = useState({
     address: "",
@@ -49,6 +75,63 @@ const Cases = () => {
 
   const [selectedCaseId, setSelectedCaseId] = useState<string>("");
   const [showAddressForm, setShowAddressForm] = useState(false);
+  const [selectedAlertGroupId, setSelectedAlertGroupId] = useState<string>("");
+
+  // Mock data for alert groups
+  const [alertGroups, setAlertGroups] = useState<AlertGroup[]>([
+    {
+      id: "1",
+      name: "Primary Investigation Team",
+      emails: ["detective.lim@cpib.gov.sg", "analyst.tan@cpib.gov.sg"],
+      createdDate: "2024-01-10"
+    },
+    {
+      id: "2", 
+      name: "Senior Management",
+      emails: ["director@cpib.gov.sg", "supervisor.wong@cpib.gov.sg"],
+      createdDate: "2024-01-12"
+    }
+  ]);
+
+  // Mock data for alerts
+  const [alerts, setAlerts] = useState<Alert[]>([
+    {
+      id: "1",
+      groupId: "1",
+      address: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+      caseId: "CPIB-2024-001",
+      transactionHash: "abc123def456ghi789",
+      amount: "0.5842",
+      currency: "BTC",
+      direction: "out",
+      timestamp: "2024-01-20 14:23:15",
+      status: "new"
+    },
+    {
+      id: "2",
+      groupId: "1",
+      address: "0x742d35Cc6634C0532925a3b8D5e7891db9F0f8c",
+      caseId: "CPIB-2024-002",
+      transactionHash: "def456ghi789jkl012",
+      amount: "15.2341",
+      currency: "ETH",
+      direction: "in",
+      timestamp: "2024-01-19 09:15:42",
+      status: "acknowledged"
+    },
+    {
+      id: "3",
+      groupId: "2",
+      address: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+      caseId: "CPIB-2024-001",
+      transactionHash: "ghi789jkl012mno345",
+      amount: "2.1000",
+      currency: "BTC",
+      direction: "out",
+      timestamp: "2024-01-18 16:45:30",
+      status: "resolved"
+    }
+  ]);
 
   // Mock data for cases
   const [cases, setCases] = useState<CaseData[]>([
@@ -122,6 +205,71 @@ const Cases = () => {
       title: "Case Created",
       description: `Case ${newCase.caseId} has been created successfully`,
     });
+  };
+
+  const handleCreateAlertGroup = () => {
+    if (!newAlertGroup.name || !newAlertGroup.email) {
+      toast({
+        title: "Error",
+        description: "Please fill in group name and at least one email",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const alertGroupData: AlertGroup = {
+      id: Date.now().toString(),
+      name: newAlertGroup.name,
+      emails: [newAlertGroup.email],
+      createdDate: new Date().toISOString().split('T')[0]
+    };
+
+    setAlertGroups([...alertGroups, alertGroupData]);
+    setNewAlertGroup({ name: "", email: "" });
+    
+    toast({
+      title: "Alert Group Created",
+      description: `Alert group "${newAlertGroup.name}" has been created successfully`,
+    });
+  };
+
+  const handleAddEmailToGroup = (groupId: string, email: string) => {
+    if (!email || !email.includes('@')) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setAlertGroups(alertGroups.map(group => 
+      group.id === groupId && !group.emails.includes(email)
+        ? { ...group, emails: [...group.emails, email] }
+        : group
+    ));
+
+    toast({
+      title: "Email Added",
+      description: "Email has been added to the alert group",
+    });
+  };
+
+  const handleRemoveEmailFromGroup = (groupId: string, emailToRemove: string) => {
+    setAlertGroups(alertGroups.map(group => 
+      group.id === groupId
+        ? { ...group, emails: group.emails.filter(email => email !== emailToRemove) }
+        : group
+    ));
+
+    toast({
+      title: "Email Removed",
+      description: "Email has been removed from the alert group",
+    });
+  };
+
+  const getAlertsForGroup = (groupId: string) => {
+    return alerts.filter(alert => alert.groupId === groupId);
   };
 
   const handleAddAddress = () => {
@@ -221,6 +369,166 @@ const Cases = () => {
             <Button onClick={handleCreateCase} className="w-full md:w-auto">
               Create Case
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Create Alert Group */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bell className="h-5 w-5" />
+              Create Alert Group
+            </CardTitle>
+            <CardDescription>
+              Create a notification group to receive alerts for wallet activity
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="alertGroupName">Group Name *</Label>
+                <Input
+                  id="alertGroupName"
+                  placeholder="Enter alert group name..."
+                  value={newAlertGroup.name}
+                  onChange={(e) => setNewAlertGroup({ ...newAlertGroup, name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="alertEmail">Email Address *</Label>
+                <Input
+                  id="alertEmail"
+                  type="email"
+                  placeholder="email@cpib.gov.sg"
+                  value={newAlertGroup.email}
+                  onChange={(e) => setNewAlertGroup({ ...newAlertGroup, email: e.target.value })}
+                />
+              </div>
+            </div>
+            <Button onClick={handleCreateAlertGroup} className="w-full md:w-auto">
+              Create Alert Group
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Manage Alert Groups */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              Alert Groups
+            </CardTitle>
+            <CardDescription>
+              Manage email notification groups and view alerts
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {alertGroups.map((group) => {
+                const groupAlerts = getAlertsForGroup(group.id);
+                return (
+                  <div key={group.id} className="border rounded-lg p-4 space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-lg font-semibold">{group.name}</h3>
+                          <Badge variant="outline">{group.emails.length} emails</Badge>
+                          <Badge variant="secondary">{groupAlerts.length} alerts</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">Created: {group.createdDate}</p>
+                      </div>
+                    </div>
+
+                    {/* Email Management */}
+                    <div className="space-y-3">
+                      <h4 className="font-medium">Email Addresses:</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {group.emails.map((email, index) => (
+                          <div key={index} className="flex items-center gap-2 bg-accent/50 px-3 py-1 rounded-md">
+                            <span className="text-sm">{email}</span>
+                            {group.emails.length > 1 && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-4 w-4 p-0"
+                                onClick={() => handleRemoveEmailFromGroup(group.id, email)}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Add new email..."
+                          type="email"
+                          id={`new-email-${group.id}`}
+                          className="max-w-xs"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const input = document.getElementById(`new-email-${group.id}`) as HTMLInputElement;
+                            if (input?.value) {
+                              handleAddEmailToGroup(group.id, input.value);
+                              input.value = "";
+                            }
+                          }}
+                        >
+                          Add Email
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Alerts for this group */}
+                    {groupAlerts.length > 0 && (
+                      <>
+                        <Separator />
+                        <div className="space-y-3">
+                          <h4 className="font-medium flex items-center gap-2">
+                            <AlertTriangle className="h-4 w-4" />
+                            Recent Alerts:
+                          </h4>
+                          <div className="space-y-3 max-h-64 overflow-y-auto">
+                            {groupAlerts.map((alert) => (
+                              <div key={alert.id} className="bg-accent/30 p-3 rounded-md space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant={alert.status === 'new' ? 'destructive' : 
+                                                  alert.status === 'acknowledged' ? 'default' : 'secondary'}>
+                                      {alert.status}
+                                    </Badge>
+                                    <Badge variant="outline">{alert.caseId}</Badge>
+                                    <div className="flex items-center gap-1">
+                                      {alert.direction === 'in' ? (
+                                        <TrendingUp className="h-4 w-4 text-green-500" />
+                                      ) : (
+                                        <TrendingDown className="h-4 w-4 text-red-500" />
+                                      )}
+                                      <span className="text-sm font-medium">
+                                        {alert.direction === 'in' ? 'Incoming' : 'Outgoing'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <span className="text-xs text-muted-foreground">{alert.timestamp}</span>
+                                </div>
+                                <div className="space-y-1 text-sm">
+                                  <p><span className="font-medium">Address:</span> {alert.address}</p>
+                                  <p><span className="font-medium">Transaction:</span> {alert.transactionHash}</p>
+                                  <p><span className="font-medium">Amount:</span> {alert.amount} {alert.currency}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </CardContent>
         </Card>
 
