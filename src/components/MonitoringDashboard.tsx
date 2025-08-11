@@ -91,6 +91,14 @@ const MonitoringDashboard = () => {
     }
   ]);
 
+  const handleCaseChange = (value: string) => {
+    if (value === "new-case") {
+      navigate("/cases");
+      return;
+    }
+    setSelectedCase(value);
+  };
+
   const handleAddWallet = () => {
     if (!newAddress || !selectedCase) {
       toast({
@@ -98,12 +106,6 @@ const MonitoringDashboard = () => {
         description: "Please fill in all required fields",
         variant: "destructive",
       });
-      return;
-    }
-
-    if (selectedCase === "new-case") {
-      // Redirect to cases page to create new case
-      navigate("/cases");
       return;
     }
 
@@ -204,7 +206,7 @@ const MonitoringDashboard = () => {
                 id="caseSelect"
                 className="w-full px-3 py-2 border border-input bg-background rounded-md text-foreground z-50"
                 value={selectedCase}
-                onChange={(e) => setSelectedCase(e.target.value)}
+                onChange={(e) => handleCaseChange(e.target.value)}
               >
                 <option value="">Select a case...</option>
                 <option value="new-case" className="font-medium">+ New Case</option>
