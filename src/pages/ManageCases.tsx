@@ -430,13 +430,13 @@ const ManageCases = () => {
                           Created: {case_.createdDate}
                         </div>
                       </div>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm" className="flex items-center gap-2">
-                            <Trash2 className="h-4 w-4" />
-                            Delete Case
-                          </Button>
-                        </AlertDialogTrigger>
+                       <AlertDialog>
+                         <AlertDialogTrigger asChild>
+                           <Button variant="danger" size="sm" className="flex items-center gap-2">
+                             <Trash2 className="h-4 w-4" />
+                             Delete Case
+                           </Button>
+                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>Delete Case</AlertDialogTitle>
@@ -444,12 +444,12 @@ const ManageCases = () => {
                               Are you sure you want to delete "{case_.name}"? This action cannot be undone and will remove all associated addresses.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeleteCase(case_.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
+                           <AlertDialogFooter>
+                             <AlertDialogCancel>Cancel</AlertDialogCancel>
+                             <AlertDialogAction onClick={() => handleDeleteCase(case_.id)} className="bg-danger text-danger-foreground hover:bg-danger-hover">
+                               Delete
+                             </AlertDialogAction>
+                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
                     </div>
@@ -474,12 +474,12 @@ const ManageCases = () => {
                                     Seized: {address.dateSeized}
                                   </p>
                                 </div>
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button variant="destructive" size="sm">
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </AlertDialogTrigger>
+                                 <AlertDialog>
+                                   <AlertDialogTrigger asChild>
+                                     <Button variant="danger" size="sm">
+                                       <Trash2 className="h-4 w-4" />
+                                     </Button>
+                                   </AlertDialogTrigger>
                                   <AlertDialogContent>
                                     <AlertDialogHeader>
                                       <AlertDialogTitle>Delete Address</AlertDialogTitle>
@@ -487,12 +487,12 @@ const ManageCases = () => {
                                         Are you sure you want to remove this address from the case? This action cannot be undone.
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => handleDeleteAddress(case_.id, address.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                        Delete
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
+                                     <AlertDialogFooter>
+                                       <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                       <AlertDialogAction onClick={() => handleDeleteAddress(case_.id, address.id)} className="bg-danger text-danger-foreground hover:bg-danger-hover">
+                                         Delete
+                                       </AlertDialogAction>
+                                     </AlertDialogFooter>
                                   </AlertDialogContent>
                                 </AlertDialog>
                               </div>
@@ -533,13 +533,13 @@ const ManageCases = () => {
                           </div>
                           <p className="text-sm text-muted-foreground">Created: {group.createdDate}</p>
                         </div>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="sm" className="flex items-center gap-2">
-                              <Trash2 className="h-4 w-4" />
-                              Delete Group
-                            </Button>
-                          </AlertDialogTrigger>
+                         <AlertDialog>
+                           <AlertDialogTrigger asChild>
+                             <Button variant="danger" size="sm" className="flex items-center gap-2">
+                               <Trash2 className="h-4 w-4" />
+                               Delete Group
+                             </Button>
+                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>Delete Alert Group</AlertDialogTitle>
@@ -547,12 +547,12 @@ const ManageCases = () => {
                                 Are you sure you want to delete "{group.name}"? This action cannot be undone and will remove the group from any associated cases.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteAlertGroup(group.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
+                             <AlertDialogFooter>
+                               <AlertDialogCancel>Cancel</AlertDialogCancel>
+                               <AlertDialogAction onClick={() => handleDeleteAlertGroup(group.id)} className="bg-danger text-danger-foreground hover:bg-danger-hover">
+                                 Delete
+                               </AlertDialogAction>
+                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
                       </div>
