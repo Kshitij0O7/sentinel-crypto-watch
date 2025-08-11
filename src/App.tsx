@@ -10,6 +10,7 @@ import NewCase from "./pages/NewCase";
 import ManageCases from "./pages/ManageCases";
 import AssetsUnderSeizure from "./pages/AssetsUnderSeizure";
 import MonitoredWallets from "./pages/MonitoredWallets";
+import RecentActivity from "./pages/RecentActivity";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/cases" element={<ManageCases />} />
           <Route path="/assets" element={<AssetsUnderSeizure />} />
           <Route path="/wallets" element={<MonitoredWallets />} />
+          <Route path="/activity" element={<RecentActivity />} />
           <Route path="/wallet/:walletId" element={<WalletDetails />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

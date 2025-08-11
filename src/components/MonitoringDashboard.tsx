@@ -141,7 +141,7 @@ const MonitoringDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => navigate("/activity")}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
@@ -149,7 +149,7 @@ const MonitoringDashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold text-warning">2</div>
             <p className="text-xs text-muted-foreground">
-              Transactions detected
+              Click to view all activity
             </p>
           </CardContent>
         </Card>
