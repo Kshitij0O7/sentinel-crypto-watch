@@ -56,7 +56,9 @@ const Cases = () => {
   const [newCase, setNewCase] = useState({
     name: "",
     caseId: "",
-    description: ""
+    description: "",
+    address: "",
+    blockchain: "Bitcoin"
   });
 
   // Form states for new alert group
@@ -189,21 +191,28 @@ const Cases = () => {
       return;
     }
 
+    const addresses = newCase.address ? [{
+      id: Date.now().toString(),
+      address: newCase.address,
+      blockchain: newCase.blockchain,
+      dateSeized: new Date().toISOString().split('T')[0]
+    }] : [];
+
     const caseData: CaseData = {
       id: Date.now().toString(),
       name: newCase.name,
       caseId: newCase.caseId,
       description: newCase.description,
       createdDate: new Date().toISOString().split('T')[0],
-      addresses: []
+      addresses
     };
 
     setCases([...cases, caseData]);
-    setNewCase({ name: "", caseId: "", description: "" });
+    setNewCase({ name: "", caseId: "", description: "", address: "", blockchain: "Bitcoin" });
     
     toast({
       title: "Case Created",
-      description: `Case ${newCase.caseId} has been created successfully`,
+      description: `Case ${newCase.caseId} has been created successfully${newCase.address ? ' with address' : ''}`,
     });
   };
 
@@ -366,6 +375,38 @@ const Cases = () => {
                 rows={3}
               />
             </div>
+            
+            {/* Optional Address Section */}
+            <div className="border-t pt-4 space-y-4">
+              <h4 className="font-medium text-sm text-muted-foreground">Initial Address (Optional)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="caseAddress">Wallet Address</Label>
+                  <Input
+                    id="caseAddress"
+                    placeholder="Enter wallet address (optional)..."
+                    value={newCase.address}
+                    onChange={(e) => setNewCase({ ...newCase, address: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="caseBlockchain">Blockchain</Label>
+                  <select
+                    id="caseBlockchain"
+                    className="w-full px-3 py-2 border border-input bg-background rounded-md text-foreground z-50"
+                    value={newCase.blockchain}
+                    onChange={(e) => setNewCase({ ...newCase, blockchain: e.target.value })}
+                  >
+                    {blockchainOptions.map((blockchain) => (
+                      <option key={blockchain} value={blockchain}>
+                        {blockchain}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+            
             <Button onClick={handleCreateCase} className="w-full md:w-auto">
               Create Case
             </Button>
