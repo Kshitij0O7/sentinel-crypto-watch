@@ -183,10 +183,10 @@ const MonitoringDashboard = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="caseId">Case ID</Label>
+              <Label htmlFor="caseId">Case Name</Label>
               <Input
                 id="caseId"
-                placeholder="CPIB-2024-XXX"
+                placeholder="Enter case name..."
                 value={newCaseId}
                 onChange={(e) => setNewCaseId(e.target.value)}
               />
