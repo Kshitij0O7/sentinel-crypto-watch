@@ -3,14 +3,14 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import WalletDetails from "./pages/WalletDetails";
-import NewCase from "./pages/NewCase";
-import ManageCases from "./pages/ManageCases";
-import AssetsUnderSeizure from "./pages/AssetsUnderSeizure";
-import MonitoredWallets from "./pages/MonitoredWallets";
-import RecentActivity from "./pages/RecentActivity";
+import Index from "./app/page";
+import NotFound from "./app/not-found";
+import WalletDetails from "./app/wallet/[walletId]/page";
+import NewCase from "./app/new-case/page";
+import ManageCases from "./app/cases/page";
+import AssetsUnderSeizure from "./app/assets/page";
+import MonitoredWallets from "./app/wallets/page";
+import RecentActivity from "./app/activity/page";
 
 const queryClient = new QueryClient();
 
