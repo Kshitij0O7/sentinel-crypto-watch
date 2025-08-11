@@ -14,6 +14,7 @@ interface WalletAddress {
   blockchain: string;
   caseId: string;
   dateSeized: string;
+  dateAdded: string;
   status: 'active' | 'inactive';
   lastActivity?: string;
   balance: string;
@@ -53,6 +54,7 @@ const MonitoringDashboard = () => {
       blockchain: "Bitcoin",
       caseId: "CPIB-2024-001",
       dateSeized: "2024-01-15",
+      dateAdded: "2024-01-15",
       status: "active",
       lastActivity: "2024-01-20",
       balance: "0.5842 BTC"
@@ -63,6 +65,7 @@ const MonitoringDashboard = () => {
       blockchain: "Ethereum",
       caseId: "CPIB-2024-002",
       dateSeized: "2024-01-18",
+      dateAdded: "2024-01-18",
       status: "active",
       balance: "15.2341 ETH"
     }
@@ -301,6 +304,7 @@ const MonitoringDashboard = () => {
                   <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                     <span>Case: {wallet.caseId}</span>
                     <span>Seized: {wallet.dateSeized}</span>
+                    <span>Added to System: {wallet.dateAdded}</span>
                     <span>Balance: {wallet.balance}</span>
                   </div>
                 </div>

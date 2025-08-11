@@ -16,6 +16,7 @@ interface CaseData {
   caseId: string;
   description: string;
   createdDate: string;
+  dateAdded: string;
   addresses: AddressData[];
   alertGroupId?: string;
 }
@@ -46,6 +47,7 @@ interface AddressData {
   blockchain: string;
   privateLabel?: string;
   dateSeized: string;
+  dateAdded: string;
 }
 
 const ManageCases = () => {
@@ -128,13 +130,15 @@ const ManageCases = () => {
       caseId: "CPIB-2024-001",
       description: "Investigation into suspected cryptocurrency fraud involving multiple wallets and exchanges.",
       createdDate: "2024-01-15",
+      dateAdded: "2024-01-15",
       addresses: [
         {
           id: "1",
           address: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
           blockchain: "Bitcoin",
           privateLabel: "Suspect Primary Wallet",
-          dateSeized: "2024-01-15"
+          dateSeized: "2024-01-15",
+          dateAdded: "2024-01-15"
         }
       ]
     },
@@ -144,12 +148,14 @@ const ManageCases = () => {
       caseId: "CPIB-2024-002",
       description: "Complex money laundering scheme involving DeFi protocols and multiple blockchain networks.",
       createdDate: "2024-01-18",
+      dateAdded: "2024-01-18",
       addresses: [
         {
           id: "2",
           address: "0x742d35Cc6634C0532925a3b8D5e7891db9F0f8c",
           blockchain: "Ethereum",
-          dateSeized: "2024-01-18"
+          dateSeized: "2024-01-18",
+          dateAdded: "2024-01-18"
         }
       ]
     }
@@ -216,7 +222,8 @@ const ManageCases = () => {
       address: newAddress.address,
       blockchain: newAddress.blockchain,
       privateLabel: newAddress.privateLabel || undefined,
-      dateSeized: newAddress.dateSeized || new Date().toISOString().split('T')[0]
+      dateSeized: newAddress.dateSeized || new Date().toISOString().split('T')[0],
+      dateAdded: new Date().toISOString().split('T')[0]
     };
 
     setCases(cases.map(case_ => 
@@ -425,9 +432,15 @@ const ManageCases = () => {
                         </div>
                         <h3 className="text-lg font-semibold">{case_.name}</h3>
                         <p className="text-sm text-muted-foreground">{case_.description}</p>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Calendar className="h-4 w-4" />
-                          Created: {case_.createdDate}
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            Created: {case_.createdDate}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            Added to System: {case_.dateAdded}
+                          </div>
                         </div>
                       </div>
                        <AlertDialog>
@@ -470,9 +483,10 @@ const ManageCases = () => {
                                     )}
                                   </div>
                                   <p className="font-mono text-sm">{address.address}</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    Seized: {address.dateSeized}
-                                  </p>
+                                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                    <span>Seized: {address.dateSeized}</span>
+                                    <span>Added to System: {address.dateAdded}</span>
+                                  </div>
                                 </div>
                                  <AlertDialog>
                                    <AlertDialogTrigger asChild>
