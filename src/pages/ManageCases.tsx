@@ -356,6 +356,73 @@ const ManageCases = () => {
             </CardContent>
           </Card>
 
+          {/* Existing Cases */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5" />
+                Existing Cases
+              </CardTitle>
+              <CardDescription>
+                View and manage all investigation cases
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {cases.map((case_) => (
+                  <div key={case_.id} className="border rounded-lg p-4 space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">{case_.caseId}</Badge>
+                          <Badge variant="secondary">{case_.addresses.length} addresses</Badge>
+                          {case_.alertGroupId && (
+                            <Badge variant="default">
+                              {alertGroups.find(g => g.id === case_.alertGroupId)?.name || "Alert Group"}
+                            </Badge>
+                          )}
+                        </div>
+                        <h3 className="text-lg font-semibold">{case_.name}</h3>
+                        <p className="text-sm text-muted-foreground">{case_.description}</p>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Calendar className="h-4 w-4" />
+                          Created: {case_.createdDate}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Addresses */}
+                    {case_.addresses.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium">Addresses:</h4>
+                        <div className="space-y-2">
+                          {case_.addresses.map((address) => (
+                            <div key={address.id} className="bg-accent/30 p-3 rounded-md">
+                              <div className="flex items-start justify-between">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="outline">{address.blockchain}</Badge>
+                                    {address.privateLabel && (
+                                      <Badge variant="secondary">{address.privateLabel}</Badge>
+                                    )}
+                                  </div>
+                                  <p className="font-mono text-sm">{address.address}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    Seized: {address.dateSeized}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Manage Alert Groups */}
           <Card>
             <CardHeader>
@@ -473,73 +540,6 @@ const ManageCases = () => {
                     </div>
                   );
                 })}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Existing Cases */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" />
-                Existing Cases
-              </CardTitle>
-              <CardDescription>
-                View and manage all investigation cases
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {cases.map((case_) => (
-                  <div key={case_.id} className="border rounded-lg p-4 space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">{case_.caseId}</Badge>
-                          <Badge variant="secondary">{case_.addresses.length} addresses</Badge>
-                          {case_.alertGroupId && (
-                            <Badge variant="default">
-                              {alertGroups.find(g => g.id === case_.alertGroupId)?.name || "Alert Group"}
-                            </Badge>
-                          )}
-                        </div>
-                        <h3 className="text-lg font-semibold">{case_.name}</h3>
-                        <p className="text-sm text-muted-foreground">{case_.description}</p>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Calendar className="h-4 w-4" />
-                          Created: {case_.createdDate}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Addresses */}
-                    {case_.addresses.length > 0 && (
-                      <div className="space-y-2">
-                        <h4 className="font-medium">Addresses:</h4>
-                        <div className="space-y-2">
-                          {case_.addresses.map((address) => (
-                            <div key={address.id} className="bg-accent/30 p-3 rounded-md">
-                              <div className="flex items-start justify-between">
-                                <div className="space-y-1">
-                                  <div className="flex items-center gap-2">
-                                    <Badge variant="outline">{address.blockchain}</Badge>
-                                    {address.privateLabel && (
-                                      <Badge variant="secondary">{address.privateLabel}</Badge>
-                                    )}
-                                  </div>
-                                  <p className="font-mono text-sm">{address.address}</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    Seized: {address.dateSeized}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
               </div>
             </CardContent>
           </Card>
