@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { FolderOpen } from "lucide-react";
+import { FolderOpen, Plus } from "lucide-react";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
 import MonitoringDashboard from "@/components/MonitoringDashboard";
 
@@ -16,10 +16,16 @@ const Index = () => {
             <h2 className="text-2xl font-bold">Monitoring Dashboard</h2>
             <p className="text-muted-foreground">Overview of seized crypto assets and recent activity</p>
           </div>
-          <Button onClick={() => navigate("/cases")} className="flex items-center gap-2">
-            <FolderOpen className="h-4 w-4" />
-            Manage Cases
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => navigate("/new-case")} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              New Case
+            </Button>
+            <Button onClick={() => navigate("/cases")} className="flex items-center gap-2">
+              <FolderOpen className="h-4 w-4" />
+              Manage Cases
+            </Button>
+          </div>
         </div>
         <MonitoringDashboard />
       </div>
