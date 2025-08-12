@@ -11,6 +11,7 @@ import ManageCases from "./app/cases/page";
 import AssetsUnderSeizure from "./app/assets/page";
 import MonitoredWallets from "./app/wallets/page";
 import RecentActivity from "./app/activity/page";
+import Presentation from "./app/presentation/page";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/assets" element={<AssetsUnderSeizure />} />
           <Route path="/wallets" element={<MonitoredWallets />} />
           <Route path="/activity" element={<RecentActivity />} />
+          <Route path="/presentation" element={<Presentation />} />
           <Route path="/wallet/:walletId" element={<WalletDetails />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
