@@ -11,7 +11,7 @@ let config = {
    url: 'https://streaming.bitquery.io/graphql',
    headers: { 
       'Content-Type': 'application/json', 
-      'Authorization': 'Bearer ory_at_g1MRMH3YXTbyZciCviBDp6PU4Eyyr-PIjxeE1LqbAVA.f3jrpzrCIbcErND0IjEj_kocpAQk90Tn6YIpopAmvg0'
+      'Authorization': 'Bearer <Bitquery Access Token>'
    },
    data : data
 };
