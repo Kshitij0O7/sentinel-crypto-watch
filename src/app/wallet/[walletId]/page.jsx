@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,99 +14,131 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {getStats, getTransactionHistory, getHoldings} from '@/api/bitquery-api';
+import { symbol } from "zod";
 
 const WalletDetails = () => {
   const { walletId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Mock data - in real app this would be fetched based on walletId
-  const walletDetails = {
-    id: walletId || "1",
-    address: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
-    blockchain: "Bitcoin",
+  const [walletDetails, setWalletDetails] = useState({
+    address: walletId,
+    blockchain: "Ethereum",
     caseId: "CPIB-2024-001",
     dateSeized: "2024-01-15",
     status: "active",
-    lastActivity: "2024-01-20",
-    balance: "0.5842 BTC",
-    totalTransactions: 23,
+    lastActivity: "",
+    balance: "",
+    totalTransactions: 0,
     firstSeen: "2024-01-10",
-    lastSeen: "2024-01-20",
+    lastSeen: "Today",
     tags: ["High Priority", "Investigation Active"]
-  };
+  });
 
-  const transactions = [
-    {
-      id: "1",
-      hash: "abc123def456ghi789jkl012mno345pqr678stu901vwx234yz567",
-      from: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
-      to: "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
-      amount: "0.0001",
-      currency: "BTC",
-      timestamp: "2024-01-20 14:23:15",
-      status: "confirmed",
-      blockHeight: 825123,
-      gasUsed: "0.00001"
-    },
-    {
-      id: "2",
-      hash: "def456ghi789jkl012mno345pqr678stu901vwx234yz567abc123",
-      from: "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
-      to: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
-      amount: "0.002",
-      currency: "BTC",
-      timestamp: "2024-01-19 09:15:42",
-      status: "confirmed",
-      blockHeight: 825098,
-      gasUsed: "0.00001"
-    },
-    {
-      id: "3",
-      hash: "ghi789jkl012mno345pqr678stu901vwx234yz567abc123def456",
-      from: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
-      to: "1JfbZRwdDHKZmuiZgYArJZhcuuzuw2HuMu",
-      amount: "0.0005",
-      currency: "BTC",
-      timestamp: "2024-01-18 16:45:21",
-      status: "confirmed",
-      blockHeight: 825067
+  useEffect(()=>{
+    const fetchStats = async () => {
+      try {
+        const {balance, token, transactionRecord, lastTransaction} = await getStats(walletId); 
+        setWalletDetails({
+          ...walletDetails,
+          balance: balance ? parseFloat(balance).toFixed(2) + ' ETH' : '0 ETH',
+          totalTransactions: transactionRecord,
+          lastActivity: lastTransaction
+        });
+      } catch (error) {
+        console.error("Error getting wallet stats:", error);
+      }
+    };
+
+    fetchStats();
+  }, [walletId]);
+
+  const [transactions, setTransactions] = useState([]);
+
+  useEffect(()=>{
+    const fetchTransactions = async () => {
+      try {
+        const result = await getTransactionHistory(walletId);
+        const formattedTransactions = result.map((tx, index) => ({
+          id: (index + 1).toString(), // or use tx.Transaction.Hash if you want a unique id
+          hash: tx.Transaction.Hash,
+          from: tx.Transfer.Sender,
+          to: tx.Transfer.Receiver,
+          amount: parseFloat(tx.Transfer.Amount).toFixed(6), // adjust decimals if needed
+          currency: 'ETH', // or determine dynamically if you have multiple currencies
+          timestamp: tx.Block.Time,
+          status: tx.Transfer.Success ? 'confirmed' : 'failed',
+          gasUsed: tx.Transaction.Gas,
+          blockHeight: tx.Block.Number
+        }));
+        setTransactions(formattedTransactions);
+        console.log(formattedTransactions);
+      } catch (error) {
+        console.error("Error getting Transactions:", error);
+      }
     }
-  ];
+
+    fetchTransactions();
+  }, [walletId]);
 
   // Mock token holdings data
-  const tokenHoldings = [
-    {
-      symbol: "BTC",
-      name: "Bitcoin",
-      balance: "0.5842",
-      value: "$25,423.15",
-    },
-    {
-      symbol: "ETH",
-      name: "Ethereum",
-      balance: "2.456",
-      value: "$5,234.67",
-      contractAddress: "0xa0b86a33e6ec92d0fb3fb5b5c0c1d8f9c3a6e7d4",
-      decimals: 18
-    },
-    {
-      symbol: "USDT",
-      name: "Tether",
-      balance: "1,250.00",
-      value: "$1,250.00",
-      contractAddress: "0xdac17f958d2ee523a2206206994597c13d831ec7",
-      decimals: 6
-    },
-    {
-      symbol: "USDC",
-      name: "USD Coin",
-      balance: "875.50",
-      value: "$875.50",
-      contractAddress: "0xa0b86a33e6ec92d0fb3fb5b5c0c1d8f9c3a6e7d4",
-      decimals: 6
+  // const tokenHoldings = [
+  //   {
+  //     symbol: "BTC",
+  //     name: "Bitcoin",
+  //     balance: "0.5842",
+  //     value: "$25,423.15",
+  //   },
+  //   {
+  //     symbol: "ETH",
+  //     name: "Ethereum",
+  //     balance: "2.456",
+  //     value: "$5,234.67",
+  //     contractAddress: "0xa0b86a33e6ec92d0fb3fb5b5c0c1d8f9c3a6e7d4",
+  //     decimals: 18
+  //   },
+  //   {
+  //     symbol: "USDT",
+  //     name: "Tether",
+  //     balance: "1,250.00",
+  //     value: "$1,250.00",
+  //     contractAddress: "0xdac17f958d2ee523a2206206994597c13d831ec7",
+  //     decimals: 6
+  //   },
+  //   {
+  //     symbol: "USDC",
+  //     name: "USD Coin",
+  //     balance: "875.50",
+  //     value: "$875.50",
+  //     contractAddress: "0xa0b86a33e6ec92d0fb3fb5b5c0c1d8f9c3a6e7d4",
+  //     decimals: 6
+  //   }
+  // ];
+
+  const [tokenHoldings, setTokenHolding] = useState([]);
+
+  useEffect(()=>{
+    const fetchTokenHoldings = async () => {
+      try {
+        const result = await getHoldings(walletId);
+        const formattedHoldings = result.map((tx) => ({
+          symbol: tx.Currency.Symbol,
+          name: tx.Currency.Name,
+          contractAddress: tx.Currency.SmartContract,
+          decimals: tx.Currency.Decimals,
+          balance: parseFloat(tx.balance).toFixed(4),
+          value: parseFloat(tx.usd).toFixed(4),
+        }));
+        setTokenHolding(formattedHoldings);
+        console.log(formattedTransactions);
+      } catch (error) {
+        console.error("Error getting Transactions:", error);
+      }
     }
-  ];
+
+    fetchTokenHoldings();
+  }, [walletId]);
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
@@ -216,7 +249,7 @@ const WalletDetails = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Token Holdings</CardTitle>
+              <CardTitle className="text-sm font-medium">Token Holdings</CardTitle>{/* Add tokens here */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm">

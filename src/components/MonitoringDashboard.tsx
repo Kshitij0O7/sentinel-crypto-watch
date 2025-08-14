@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertTriangle, Eye, Plus, Activity, DollarSign, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {getTotalAssets, getStats, getRecentTransactions} from "@/api/bitquery-api";
 
 interface WalletAddress {
   id: string;
@@ -17,7 +18,7 @@ interface WalletAddress {
   dateAdded: string;
   status: 'active' | 'inactive';
   lastActivity?: string;
-  balance: string;
+  balance?: string;
 }
 
 interface Transaction {
@@ -32,13 +33,15 @@ interface Transaction {
 }
 
 const MonitoringDashboard = () => {
+  const [balance, setBalance] = useState<any>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const [newAddress, setNewAddress] = useState("");
   const [selectedCase, setSelectedCase] = useState("");
   const [selectedBlockchain, setSelectedBlockchain] = useState("bitcoin");
+
   
-  // Mock existing cases data
+  // Mock existing cases data -> To be replaced by API call to get all cases
   const existingCases = [
     { id: "1", name: "Silk Road Investigation" },
     { id: "2", name: "Ransomware Group Alpha" },
@@ -47,52 +50,29 @@ const MonitoringDashboard = () => {
   ];
 
   // Mock data for demonstration
-  const [walletAddresses] = useState<WalletAddress[]>([
+  const [walletAddresses, setWalletAddresses] = useState<WalletAddress[]>([
     {
       id: "1",
-      address: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
-      blockchain: "Bitcoin",
+      address: "0xcf1DC766Fc2c62bef0b67A8De666c8e67aCf35f6",
+      blockchain: "Ethereum",
       caseId: "CPIB-2024-001",
       dateSeized: "2024-01-15",
       dateAdded: "2024-01-15",
       status: "active",
-      lastActivity: "2024-01-20",
-      balance: "0.5842 BTC"
+      lastActivity: "2024-01-20"
     },
     {
       id: "2", 
-      address: "0x742d35Cc6634C0532925a3b8D5e7891db9F0f8c",
+      address: "0x8C8D7C46219D9205f056f28fee5950aD564d7465",
       blockchain: "Ethereum",
       caseId: "CPIB-2024-002",
       dateSeized: "2024-01-18",
       dateAdded: "2024-01-18",
-      status: "active",
-      balance: "15.2341 ETH"
+      status: "active"
     }
   ]);
 
-  const [recentTransactions] = useState<Transaction[]>([
-    {
-      id: "1",
-      hash: "abc123...def789",
-      from: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
-      to: "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
-      amount: "0.0001",
-      currency: "BTC",
-      timestamp: "2024-01-20 14:23:15",
-      status: "confirmed"
-    },
-    {
-      id: "2",
-      hash: "def456...ghi012",
-      from: "0x742d35Cc6634C0532925a3b8D5e7891db9F0f8c",
-      to: "0x8ba1f109551bD432803012645Hac136c6a",
-      amount: "0.5",
-      currency: "ETH", 
-      timestamp: "2024-01-19 09:15:42",
-      status: "confirmed"
-    }
-  ]);
+  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
 
   const handleCaseChange = (value: string) => {
     if (value === "new-case") {
@@ -123,6 +103,76 @@ const MonitoringDashboard = () => {
     setSelectedCase("");
   };
 
+  useEffect(() => {
+    const fetchBalance = async () => {
+      try {
+        const wallets = [
+          "0xcf1DC766Fc2c62bef0b67A8De666c8e67aCf35f6",
+          "0x8C8D7C46219D9205f056f28fee5950aD564d7465"
+        ];
+        const result = await getTotalAssets(JSON.stringify(wallets));
+        setBalance(parseFloat(result).toFixed(2));
+      } catch (error) {
+        console.error('Error fetching balance:', error);
+      }
+    };
+
+    fetchBalance();
+  }, []);
+
+  useEffect(() => {
+    const fetchBalances = async () => {
+      const updatedWallets = await Promise.all(
+        walletAddresses.map(async (wallet) => {
+          try {
+            const stats = await getStats(wallet.address);
+            return {
+              ...wallet,
+              balance: stats ? parseFloat(stats.balance).toFixed(2) + ' ETH' : '0 ETH',
+            };
+          } catch (error) {
+            console.error(`Failed to fetch balance for ${wallet.address}`, error);
+            return {
+              ...wallet,
+              balance: '0 ETH',
+            };
+          }
+        })
+      );
+  
+      setWalletAddresses(updatedWallets);
+    };
+  
+    fetchBalances();
+  }, []);
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try{
+        const wallets = [
+          "0xcf1DC766Fc2c62bef0b67A8De666c8e67aCf35f6",
+          "0x8C8D7C46219D9205f056f28fee5950aD564d7465"
+        ];
+        const result = await getRecentTransactions(JSON.stringify(wallets));
+        const formattedTransactions: Transaction[] = result.map((tx: any, index: number) => ({
+          id: (index + 1).toString(), // or use tx.Transaction.Hash if you want a unique id
+          hash: tx.Transaction.Hash,
+          from: tx.Transfer.Sender,
+          to: tx.Transfer.Receiver,
+          amount: parseFloat(tx.Transfer.Amount).toFixed(6), // adjust decimals if needed
+          currency: 'ETH', // or determine dynamically if you have multiple currencies
+          timestamp: tx.Block.Time,
+          status: tx.Transfer.Success ? 'confirmed' : 'failed',
+        }));
+        
+        setRecentTransactions(formattedTransactions);        
+      } catch (error){
+        console.error('Error getting Recent Transactions:', error);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -173,7 +223,7 @@ const MonitoringDashboard = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0.5842 BTC</div>
+            <div className="text-2xl font-bold">{balance} ETH</div>
             <p className="text-xs text-muted-foreground">
               Click to view all assets
             </p>
@@ -228,47 +278,7 @@ const MonitoringDashboard = () => {
                 value={selectedBlockchain}
                 onChange={(e) => setSelectedBlockchain(e.target.value)}
               >
-                <option value="bitcoin">Bitcoin Mainnet</option>
                 <option value="ethereum">Ethereum Mainnet</option>
-                <option value="bsc">Binance Smart Chain</option>
-                <option value="polygon">Polygon</option>
-                <option value="arbitrum">Arbitrum Mainnet</option>
-                <option value="avalanche">Avalanche</option>
-                <option value="solana">Solana Mainnet</option>
-                <option value="cardano">Cardano</option>
-                <option value="litecoin">Litecoin</option>
-                <option value="dogecoin">Dogecoin</option>
-                <option value="dash">Dash</option>
-                <option value="ethereum-classic">Ethereum Classic</option>
-                <option value="ethereum-pow">Ethereum PoW</option>
-                <option value="zcash">ZCash</option>
-                <option value="bitcoin-cash">Bitcoin Cash</option>
-                <option value="bitcoin-sv">Bitcoin SV</option>
-                <option value="algorand">Algorand Mainnet</option>
-                <option value="binance-dex">Binance DEX</option>
-                <option value="celo">Celo Mainnet</option>
-                <option value="conflux">Conflux Hydra</option>
-                <option value="hedera">Hedera Hashgraph</option>
-                <option value="eos">EOS Mainnet</option>
-                <option value="tron">TRON Mainnet</option>
-                <option value="beacon-chain">Beacon Chain Ethereum 2.0</option>
-                <option value="optimism">Optimism</option>
-                <option value="fantom">Fantom</option>
-                <option value="cronos">Cronos</option>
-                <option value="near">NEAR Protocol</option>
-                <option value="harmony">Harmony</option>
-                <option value="moonbeam">Moonbeam</option>
-                <option value="moonriver">Moonriver</option>
-                <option value="kusama">Kusama</option>
-                <option value="polkadot">Polkadot</option>
-                <option value="cosmos">Cosmos Hub</option>
-                <option value="osmosis">Osmosis</option>
-                <option value="terra">Terra</option>
-                <option value="thorchain">THORChain</option>
-                <option value="klaytn">Klaytn</option>
-                <option value="zilliqa">Zilliqa</option>
-                <option value="waves">Waves</option>
-                <option value="stellar">Stellar</option>
               </select>
             </div>
           </div>
@@ -305,14 +315,14 @@ const MonitoringDashboard = () => {
                     <span>Case: {wallet.caseId}</span>
                     <span>Seized: {wallet.dateSeized}</span>
                     <span>Added to System: {wallet.dateAdded}</span>
-                    <span>Balance: {wallet.balance}</span>
+                    <span>Balance: {wallet.balance ?? 'Loading...'}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 mt-4 md:mt-0">
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => navigate(`/wallet/${wallet.id}`)}
+                    onClick={() => navigate(`/wallet/${wallet.address}`)}
                   >
                     View Details
                   </Button>
