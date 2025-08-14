@@ -69,7 +69,7 @@ const WalletDetails = () => {
           currency: 'ETH', // or determine dynamically if you have multiple currencies
           timestamp: tx.Block.Time,
           status: tx.Transfer.Success ? 'confirmed' : 'failed',
-          gasUsed: tx.Transaction.Gas,
+          gasUsed: tx.Transaction.GasPrice,
           blockHeight: tx.Block.Number
         }));
         setTransactions(formattedTransactions);
