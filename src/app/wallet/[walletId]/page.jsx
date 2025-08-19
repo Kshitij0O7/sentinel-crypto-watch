@@ -52,6 +52,11 @@ const WalletDetails = () => {
     };
 
     fetchStats();
+
+    const intervalId = setInterval(fetchStats, 10000); // 10000ms = 10s
+
+    // cleanup on unmount
+    return () => clearInterval(intervalId);
   }, [walletId]);
 
   const [transactions, setTransactions] = useState([]);
@@ -80,6 +85,11 @@ const WalletDetails = () => {
     }
 
     fetchTransactions();
+
+    const intervalId = setInterval(fetchTransactions, 10000); // 10000ms = 10s
+
+    // cleanup on unmount
+    return () => clearInterval(intervalId);
   }, [walletId]);
 
   // Mock token holdings data
@@ -138,6 +148,11 @@ const WalletDetails = () => {
     }
 
     fetchTokenHoldings();
+
+    const intervalId = setInterval(fetchTokenHoldings, 10000); // 10000ms = 10s
+
+    // cleanup on unmount
+    return () => clearInterval(intervalId);
   }, [walletId]);
 
   const copyToClipboard = (text) => {

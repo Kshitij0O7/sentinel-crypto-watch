@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowUpDown, Search, Eye, Wallet, DollarSign, Activity } from "lucide-react";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
+import {getStats, getTotalAssets} from "@/api/bitquery-api";
 
 const MonitoredWallets = () => {
   const navigate = useNavigate();
@@ -13,63 +14,60 @@ const MonitoredWallets = () => {
   const [sortOrder, setSortOrder] = useState("desc");
 
   // Mock data for monitored wallet addresses
-  const [walletAddresses] = useState([
+  const [walletAddresses, setWalletAddresses] = useState([
     {
       id: "1",
-      address: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
-      blockchain: "Bitcoin",
+      address: "0xcf1DC766Fc2c62bef0b67A8De666c8e67aCf35f6",
+      blockchain: "Ethereum",
       caseId: "CPIB-2024-001",
       balance: "0.5842 BTC",
-      usdValue: 25423.15,
+      balance: 0,
       lastActivity: "2024-01-20",
       status: "active",
       dateSeized: "2024-01-15"
     },
     {
       id: "2",
-      address: "0x742d35Cc6634C0532925a3b8D5e7891db9F0f8c",
+      address: "0x8C8D7C46219D9205f056f28fee5950aD564d7465",
       blockchain: "Ethereum",
       caseId: "CPIB-2024-002",
       balance: "12.3456 ETH",
-      usdValue: 28934.67,
+      balance: 0,
       lastActivity: "2024-01-19",
       status: "active",
       dateSeized: "2024-01-18"
-    },
-    {
-      id: "3",
-      address: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
-      blockchain: "Bitcoin",
-      caseId: "CPIB-2024-003",
-      balance: "0.0234 BTC",
-      usdValue: 1019.45,
-      lastActivity: "2024-01-17",
-      status: "inactive",
-      dateSeized: "2024-01-10"
-    },
-    {
-      id: "4",
-      address: "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy",
-      blockchain: "Bitcoin",
-      caseId: "CPIB-2024-004",
-      balance: "1.2534 BTC",
-      usdValue: 54672.89,
-      lastActivity: "2024-01-21",
-      status: "active",
-      dateSeized: "2024-01-12"
-    },
-    {
-      id: "5",
-      address: "0x8ba1f109551bD432803012645Hac136c6a",
-      blockchain: "Ethereum",
-      caseId: "CPIB-2024-005",
-      balance: "5.7891 ETH",
-      usdValue: 13567.23,
-      lastActivity: "2024-01-16",
-      status: "inactive",
-      dateSeized: "2024-01-08"
     }
   ]);
+
+  useEffect(()=>{
+    const fetchStats = async () => {
+      try {
+        const updatedWallets = await Promise.all(
+          walletAddresses.map(async (wallet) => {
+            const { balance, lastTransaction } = await getStats(wallet.address);
+  
+            return {
+              ...wallet,
+              balance: balance ? Number(parseFloat(balance).toFixed(2)) : 0,
+              lastActivity: lastTransaction || wallet.lastActivity,
+            };
+          })
+        );
+  
+        setWalletAddresses(updatedWallets);
+      } catch (error) {
+        console.error("Error getting wallet stats:", error);
+      }
+    };
+
+    fetchStats();
+
+    const intervalId = setInterval(fetchStats, 10000); // 10000ms = 10s
+
+    // cleanup on unmount
+    return () => clearInterval(intervalId);
+  }, []);
+
 
   const filteredAndSortedWallets = walletAddresses
     .filter(wallet => 
@@ -78,14 +76,14 @@ const MonitoredWallets = () => {
       wallet.caseId.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => {
-      return sortOrder === "desc" ? b.usdValue - a.usdValue : a.usdValue - b.usdValue;
+      return sortOrder === "desc" ? b.balance - a.balance : a.balance - b.balance;
     });
 
   const toggleSortOrder = () => {
     setSortOrder(sortOrder === "desc" ? "asc" : "desc");
   };
 
-  const totalValue = walletAddresses.reduce((sum, wallet) => sum + wallet.usdValue, 0);
+  const totalValue = walletAddresses.reduce((sum, wallet) => sum + wallet.balance, 0);
   const activeWallets = walletAddresses.filter(wallet => wallet.status === "active").length;
 
   return (
@@ -119,11 +117,8 @@ const MonitoredWallets = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                {totalValue} ETH
               </div>
-              <p className="text-xs text-muted-foreground">
-                USD equivalent
-              </p>
             </CardContent>
           </Card>
 
@@ -179,7 +174,7 @@ const MonitoredWallets = () => {
                         {wallet.status}
                       </Badge>
                       <span className="text-lg font-semibold text-primary">
-                        ${wallet.usdValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        {wallet.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })} ETH
                       </span>
                     </div>
                     <div className="space-y-1">
@@ -198,7 +193,7 @@ const MonitoredWallets = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/wallet/${wallet.id}`)}
+                      onClick={() => navigate(`/wallet/${wallet.address}`)}
                       className="flex items-center gap-2"
                     >
                       <Eye className="h-4 w-4" />

@@ -118,6 +118,11 @@ const MonitoringDashboard = () => {
     };
 
     fetchBalance();
+
+    const intervalId = setInterval(fetchBalance, 10000); // 10000ms = 10s
+
+    // cleanup on unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
@@ -144,6 +149,11 @@ const MonitoringDashboard = () => {
     };
   
     fetchBalances();
+
+    const intervalId = setInterval(fetchBalances, 10000); // 10000ms = 10s
+
+    // cleanup on unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
@@ -172,6 +182,11 @@ const MonitoringDashboard = () => {
     };
 
     fetchTransactions();
+
+    const intervalId = setInterval(fetchTransactions, 10000); // 10000ms = 10s
+
+    // cleanup on unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   return (
