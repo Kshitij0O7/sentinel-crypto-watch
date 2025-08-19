@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowUpDown, Search, Eye, Wallet, DollarSign, Activity } from "lucide-react";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
-import walletsData from "../../../wallets.json";
+import { getWallets } from "@/api/wallets";
 import {getStats, getTotalAssets} from "@/api/bitquery-api";
 
 const MonitoredWallets = () => {
@@ -15,7 +15,7 @@ const MonitoredWallets = () => {
   const [sortOrder, setSortOrder] = useState("desc");
 
   // Mock data for monitored wallet addresses
-  const [walletAddresses, setWalletAddresses] = useState(walletsData);
+  const [walletAddresses, setWalletAddresses] = useState(getWallets());
 
   useEffect(()=>{
     const fetchStats = async () => {

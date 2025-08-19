@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertTriangle, Eye, Plus, Activity, DollarSign, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import walletsData from "../../wallets.json";
+// import walletsData from "../../wallets.json";
 import {getTotalAssets, getStats, getRecentTransactions} from "@/api/bitquery-api";
 import { getWallets, addWallet } from "@/api/wallets";
 
@@ -103,7 +103,7 @@ const MonitoringDashboard = () => {
   useEffect(() => {
     const fetchBalance = async () => {
       try {
-        const wallets = walletsData.map(wallet => wallet.address);
+        const wallets = walletAddresses.map(wallet => wallet.address);
         const result = await getTotalAssets(JSON.stringify(wallets));
         setBalance(parseFloat(result).toFixed(2));
       } catch (error) {
@@ -127,13 +127,13 @@ const MonitoringDashboard = () => {
             const stats = await getStats(wallet.address);
             return {
               ...wallet,
-              balance: stats ? parseFloat(stats.balance).toFixed(2) + ' ETH' : '0 ETH',
+              balance: stats ? parseFloat(stats.balance).toFixed(2) : '0',
             };
           } catch (error) {
             console.error(`Failed to fetch balance for ${wallet.address}`, error);
             return {
               ...wallet,
-              balance: '0 ETH',
+              balance: '0',
             };
           }
         })
@@ -153,10 +153,7 @@ const MonitoringDashboard = () => {
   useEffect(() => {
     const fetchTransactions = async () => {
       try{
-        const wallets = [
-          "0xcf1DC766Fc2c62bef0b67A8De666c8e67aCf35f6",
-          "0x8C8D7C46219D9205f056f28fee5950aD564d7465"
-        ];
+        const wallets = walletAddresses.map(wallet => wallet.address);
         const result = await getRecentTransactions(JSON.stringify(wallets));
         const formattedTransactions: Transaction[] = result.map((tx: any, index: number) => ({
           id: (index + 1).toString(), // or use tx.Transaction.Hash if you want a unique id
