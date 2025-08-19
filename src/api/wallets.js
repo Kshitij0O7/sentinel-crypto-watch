@@ -1,0 +1,55 @@
+const defaultWallets = [
+    {
+      id: "1",
+      address: "0xcf1DC766Fc2c62bef0b67A8De666c8e67aCf35f6",
+      blockchain: "Ethereum",
+      caseId: "CPIB-2024-001",
+      balance: 0,
+      lastActivity: "",
+      dateAdded: "2024-01-15",
+      status: "active",
+      dateSeized: "2024-01-15",
+    },
+    {
+      id: "2",
+      address: "0x8C8D7C46219D9205f056f28fee5950aD564d7465",
+      blockchain: "Ethereum",
+      caseId: "CPIB-2024-002",
+      balance: 0,
+      lastActivity: "",
+      dateAdded: "2024-01-15",
+      status: "active",
+      dateSeized: "2024-01-18",
+    },
+  ];
+  
+  // Initialize localStorage if empty
+  if (!localStorage.getItem("wallets")) {
+    localStorage.setItem("wallets", JSON.stringify(defaultWallets));
+  }
+  
+  // Get all wallets
+  export const getWallets = () => {
+    return JSON.parse(localStorage.getItem("wallets") || "[]");
+  };
+  
+  // Add a new wallet
+  export const addWallet = ({ address, caseId }) => {
+    const wallets = getWallets();
+  
+    const newWallet = {
+      id: (wallets.length + 1).toString(),
+      address,
+      blockchain: "Ethereum",
+      caseId,
+      balance: 0,
+      lastActivity: "",
+      dateAdded: "2024-01-15",
+      status: "active",
+      dateSeized: "2024-01-18",
+    };
+  
+    wallets.push(newWallet);
+    localStorage.setItem("wallets", JSON.stringify(wallets));
+    return newWallet;
+  };

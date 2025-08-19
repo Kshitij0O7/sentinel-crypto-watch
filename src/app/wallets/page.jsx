@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowUpDown, Search, Eye, Wallet, DollarSign, Activity } from "lucide-react";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
+import walletsData from "../../../wallets.json";
 import {getStats, getTotalAssets} from "@/api/bitquery-api";
 
 const MonitoredWallets = () => {
@@ -14,30 +15,7 @@ const MonitoredWallets = () => {
   const [sortOrder, setSortOrder] = useState("desc");
 
   // Mock data for monitored wallet addresses
-  const [walletAddresses, setWalletAddresses] = useState([
-    {
-      id: "1",
-      address: "0xcf1DC766Fc2c62bef0b67A8De666c8e67aCf35f6",
-      blockchain: "Ethereum",
-      caseId: "CPIB-2024-001",
-      balance: "0.5842 BTC",
-      balance: 0,
-      lastActivity: "2024-01-20",
-      status: "active",
-      dateSeized: "2024-01-15"
-    },
-    {
-      id: "2",
-      address: "0x8C8D7C46219D9205f056f28fee5950aD564d7465",
-      blockchain: "Ethereum",
-      caseId: "CPIB-2024-002",
-      balance: "12.3456 ETH",
-      balance: 0,
-      lastActivity: "2024-01-19",
-      status: "active",
-      dateSeized: "2024-01-18"
-    }
-  ]);
+  const [walletAddresses, setWalletAddresses] = useState(walletsData);
 
   useEffect(()=>{
     const fetchStats = async () => {

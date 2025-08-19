@@ -1,5 +1,4 @@
 import axios from "axios";
-import { add } from "date-fns";
 let data = {
    "query": "",
    "variables": "{}"
@@ -69,6 +68,8 @@ export const getStats = async (address) => {
     config.data.query = query;
 
     const response = await axios.request(config);
+
+    // console.log(response.data);
 
     const balance = response.data.data.EVM.balance[0].sum;
     const token = response.data.data.EVM.tokens[0].uniq;

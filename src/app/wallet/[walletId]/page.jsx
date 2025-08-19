@@ -78,7 +78,7 @@ const WalletDetails = () => {
           blockHeight: tx.Block.Number
         }));
         setTransactions(formattedTransactions);
-        console.log(formattedTransactions);
+        // console.log(formattedTransactions);
       } catch (error) {
         console.error("Error getting Transactions:", error);
       }
@@ -141,7 +141,7 @@ const WalletDetails = () => {
           value: parseFloat(tx.usd).toFixed(4),
         }));
         setTokenHolding(formattedHoldings);
-        console.log(formattedTransactions);
+        // console.log(formattedTransactions);
       } catch (error) {
         console.error("Error getting Transactions:", error);
       }

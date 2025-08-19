@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertTriangle, Eye, Plus, Activity, DollarSign, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import walletsData from "../../wallets.json";
 import {getTotalAssets, getStats, getRecentTransactions} from "@/api/bitquery-api";
+import { getWallets, addWallet } from "@/api/wallets";
 
 interface WalletAddress {
   id: string;
@@ -16,7 +18,7 @@ interface WalletAddress {
   caseId: string;
   dateSeized: string;
   dateAdded: string;
-  status: 'active' | 'inactive';
+  status: string;
   lastActivity?: string;
   balance?: string;
 }
@@ -50,29 +52,11 @@ const MonitoringDashboard = () => {
   ];
 
   // Mock data for demonstration
-  const [walletAddresses, setWalletAddresses] = useState<WalletAddress[]>([
-    {
-      id: "1",
-      address: "0xcf1DC766Fc2c62bef0b67A8De666c8e67aCf35f6",
-      blockchain: "Ethereum",
-      caseId: "CPIB-2024-001",
-      dateSeized: "2024-01-15",
-      dateAdded: "2024-01-15",
-      status: "active",
-      lastActivity: "2024-01-20"
-    },
-    {
-      id: "2", 
-      address: "0x8C8D7C46219D9205f056f28fee5950aD564d7465",
-      blockchain: "Ethereum",
-      caseId: "CPIB-2024-002",
-      dateSeized: "2024-01-18",
-      dateAdded: "2024-01-18",
-      status: "active"
-    }
-  ]);
+  const [walletAddresses, setWalletAddresses] = useState<WalletAddress[]>(getWallets());
 
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+
+  // console.log(walletAddresses);
 
   const handleCaseChange = (value: string) => {
     if (value === "new-case") {
@@ -91,25 +75,35 @@ const MonitoringDashboard = () => {
       });
       return;
     }
-
-    const caseName = existingCases.find(c => c.id === selectedCase)?.name || selectedCase;
-    
-    toast({
-      title: "Wallet Added",
-      description: `Wallet address added to monitoring system for case: ${caseName}`,
-    });
-
-    setNewAddress("");
-    setSelectedCase("");
+  
+    // Create new wallet object
+    const wallets = [...walletAddresses]; // copy existing wallets
+    const newWallet: WalletAddress = {
+      id: (wallets.length + 1).toString(),
+      address: newAddress,
+      blockchain: "Ethereum",
+      caseId: selectedCase,
+      balance: "0",
+      lastActivity: "",
+      dateAdded: "2024-01-15",
+      status: "active",
+      dateSeized: new Date().toISOString().split("T")[0],
+    };
+  
+    wallets.push(newWallet);
+  
+    // Update state first
+    setWalletAddresses(wallets);
+  
+    // Sync to localStorage
+    localStorage.setItem("wallets", JSON.stringify(wallets));
   };
+  
 
   useEffect(() => {
     const fetchBalance = async () => {
       try {
-        const wallets = [
-          "0xcf1DC766Fc2c62bef0b67A8De666c8e67aCf35f6",
-          "0x8C8D7C46219D9205f056f28fee5950aD564d7465"
-        ];
+        const wallets = walletsData.map(wallet => wallet.address);
         const result = await getTotalAssets(JSON.stringify(wallets));
         setBalance(parseFloat(result).toFixed(2));
       } catch (error) {
