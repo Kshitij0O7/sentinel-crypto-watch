@@ -3,13 +3,41 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, MapPin, Wallet, DollarSign, Activity, AlertTriangle, Eye } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { ArrowLeft, Calendar, MapPin, Wallet, DollarSign, Activity, AlertTriangle, Eye, Users } from "lucide-react";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
 
 const CaseDetail = () => {
   const { caseId } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [caseData, setCaseData] = useState(null);
+  const [selectedAlertGroupId, setSelectedAlertGroupId] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // Mock data for alert groups
+  const alertGroups = [
+    {
+      id: "1",
+      name: "Primary Investigation Team",
+      emails: ["detective.lim@cpib.gov.sg", "analyst.tan@cpib.gov.sg"],
+      createdDate: "2024-01-10"
+    },
+    {
+      id: "2", 
+      name: "Senior Management",
+      emails: ["director@cpib.gov.sg", "supervisor.wong@cpib.gov.sg"],
+      createdDate: "2024-01-12"
+    },
+    {
+      id: "3",
+      name: "Financial Crimes Unit",
+      emails: ["fcu.lead@cpib.gov.sg", "fcu.analyst@cpib.gov.sg"],
+      createdDate: "2024-01-08"
+    }
+  ];
 
   // Mock data - in a real app, this would come from an API
   const mockCases = [
@@ -24,6 +52,7 @@ const CaseDetail = () => {
       investigator: "Detective Lim Wei Ming",
       totalValue: "45.2341",
       currency: "ETH",
+      alertGroupId: "1",
       addresses: [
         {
           id: "1",
@@ -97,6 +126,7 @@ const CaseDetail = () => {
       investigator: "Detective Sarah Chen",
       totalValue: "128.7562",
       currency: "ETH",
+      alertGroupId: "2",
       addresses: [
         {
           id: "3",
@@ -136,7 +166,41 @@ const CaseDetail = () => {
   useEffect(() => {
     const foundCase = mockCases.find(c => c.caseId === caseId);
     setCaseData(foundCase);
+    if (foundCase?.alertGroupId) {
+      setSelectedAlertGroupId(foundCase.alertGroupId);
+    }
   }, [caseId]);
+
+  const handleAssociateAlertGroup = () => {
+    if (!selectedAlertGroupId) {
+      toast({
+        title: "Error",
+        description: "Please select an alert group",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Update case data with new alert group
+    setCaseData(prev => ({
+      ...prev,
+      alertGroupId: selectedAlertGroupId
+    }));
+
+    const selectedGroup = alertGroups.find(g => g.id === selectedAlertGroupId);
+    
+    toast({
+      title: "Alert Group Associated",
+      description: `Case has been associated with "${selectedGroup?.name}"`,
+    });
+
+    setIsDialogOpen(false);
+  };
+
+  const getCurrentAlertGroup = () => {
+    if (!caseData?.alertGroupId) return null;
+    return alertGroups.find(g => g.id === caseData.alertGroupId);
+  };
 
   if (!caseData) {
     return (
@@ -202,9 +266,54 @@ const CaseDetail = () => {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>Case Overview</span>
-                <Badge variant={getStatusColor(caseData.status)}>
-                  {caseData.status.replace('_', ' ').toUpperCase()}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        {getCurrentAlertGroup() ? 'Change Alert Group' : 'Associate Alert Group'}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Associate Alert Group</DialogTitle>
+                        <DialogDescription>
+                          Select an alert group to associate with this case. Members of the selected group will receive notifications for this case.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <Select value={selectedAlertGroupId} onValueChange={setSelectedAlertGroupId}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select an alert group" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {alertGroups.map((group) => (
+                              <SelectItem key={group.id} value={group.id}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{group.name}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {group.emails.length} member{group.emails.length > 1 ? 's' : ''}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <div className="flex justify-end gap-2">
+                          <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                            Cancel
+                          </Button>
+                          <Button onClick={handleAssociateAlertGroup}>
+                            Associate Group
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                  <Badge variant={getStatusColor(caseData.status)}>
+                    {caseData.status.replace('_', ' ').toUpperCase()}
+                  </Badge>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -223,6 +332,12 @@ const CaseDetail = () => {
                       <MapPin className="h-4 w-4" />
                       <span>Investigator: {caseData.investigator}</span>
                     </div>
+                    {getCurrentAlertGroup() && (
+                      <div className="flex items-center gap-1">
+                        <Users className="h-4 w-4" />
+                        <span>Alert Group: {getCurrentAlertGroup().name}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="space-y-4">
