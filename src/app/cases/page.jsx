@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Mail, ArrowLeft, Calendar, AlertTriangle, X, Trash2 } from "lucide-react";
+import { Plus, Mail, ArrowLeft, Calendar, AlertTriangle, X, Trash2, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
 
@@ -380,7 +380,7 @@ const ManageCases = () => {
                 {cases.map((case_) => (
                   <div key={case_.id} className="border rounded-lg p-4 space-y-4">
                     <div className="flex items-start justify-between">
-                      <div className="space-y-2">
+                      <div className="space-y-2 cursor-pointer" onClick={() => navigate(`/case/${case_.caseId}`)}>
                         <div className="flex items-center gap-2">
                           <Badge variant="outline">{case_.caseId}</Badge>
                           <Badge variant="secondary">{case_.addresses.length} addresses</Badge>
@@ -390,7 +390,7 @@ const ManageCases = () => {
                             </Badge>
                           )}
                         </div>
-                        <h3 className="text-lg font-semibold">{case_.name}</h3>
+                        <h3 className="text-lg font-semibold hover:text-primary transition-colors">{case_.name}</h3>
                         <p className="text-sm text-muted-foreground">{case_.description}</p>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
@@ -403,13 +403,23 @@ const ManageCases = () => {
                           </div>
                         </div>
                       </div>
-                       <AlertDialog>
-                         <AlertDialogTrigger asChild>
-                           <Button variant="danger" size="sm" className="flex items-center gap-2">
-                             <Trash2 className="h-4 w-4" />
-                             Delete Case
-                           </Button>
-                         </AlertDialogTrigger>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/case/${case_.caseId}`)}
+                          className="flex items-center gap-2"
+                        >
+                          <Eye className="h-4 w-4" />
+                          View Details
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="danger" size="sm" className="flex items-center gap-2">
+                              <Trash2 className="h-4 w-4" />
+                              Delete Case
+                            </Button>
+                          </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>Delete Case</AlertDialogTitle>
