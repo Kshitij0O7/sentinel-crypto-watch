@@ -420,22 +420,22 @@ const ManageCases = () => {
                               Delete Case
                             </Button>
                           </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Case</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete "{case_.name}"? This action cannot be undone and will remove all associated addresses.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                           <AlertDialogFooter>
-                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                             <AlertDialogAction onClick={() => handleDeleteCase(case_.id)} className="bg-danger text-danger-foreground hover:bg-danger-hover">
-                               Delete
-                             </AlertDialogAction>
-                           </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Case</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete "{case_.name}"? This action cannot be undone and will remove all associated addresses.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteCase(case_.id)} className="bg-danger text-danger-foreground hover:bg-danger-hover">
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
 
                     {/* Addresses */}
                     {case_.addresses.length > 0 && (
