@@ -12,7 +12,7 @@ const CryptoMonitoringHeader = () => {
             <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate("/")}>
               <Shield className="h-8 w-8" />
               <div>
-                <h1 className="text-2xl font-bold">CPIB Crypto Asset Monitoring</h1>
+                <h1 className="text-2xl font-bold">Crypto Asset Monitoring</h1>
                 <p className="text-primary-foreground/80 text-sm">
                   Seized Crypto Wallet Surveillance System
                 </p>
