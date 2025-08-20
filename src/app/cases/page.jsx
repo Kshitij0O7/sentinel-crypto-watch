@@ -436,6 +436,7 @@ const ManageCases = () => {
                           </AlertDialogContent>
                         </AlertDialog>
                       </div>
+                    </div>
 
                     {/* Addresses */}
                     {case_.addresses.length > 0 && (
