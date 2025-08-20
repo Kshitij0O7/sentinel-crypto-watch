@@ -1,76 +1,51 @@
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, DollarSign, Bitcoin, Shield, TrendingUp, TrendingDown, Calendar, MapPin, Eye } from "lucide-react";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
+import { getAssets } from "@/api/wallets";
+import {getStats} from "@/api/bitquery-api";
 
 const AssetsUnderSeizure = () => {
   const navigate = useNavigate();
 
   // Mock data for seized assets
-  const seizedAssets = [
-    {
-      id: "1",
-      cryptocurrency: "Bitcoin",
-      amount: "15.7842",
-      usdValue: 687234.15,
-      walletAddress: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
-      caseId: "CPIB-2024-001",
-      status: "secured",
-      dateSeized: "2024-01-15",
-      location: "Singapore",
-      priceChange24h: 2.3
-    },
-    {
-      id: "2",
-      cryptocurrency: "Ethereum",
-      amount: "45.3456",
-      usdValue: 106234.67,
-      walletAddress: "0x742d35Cc6634C0532925a3b8D5e7891db9F0f8c",
-      caseId: "CPIB-2024-002",
-      status: "secured",
-      dateSeized: "2024-01-18",
-      location: "Singapore",
-      priceChange24h: -1.2
-    },
-    {
-      id: "3",
-      cryptocurrency: "Bitcoin",
-      amount: "8.2534",
-      usdValue: 359672.89,
-      walletAddress: "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy",
-      caseId: "CPIB-2024-003",
-      status: "liquidated",
-      dateSeized: "2024-01-10",
-      location: "Singapore",
-      priceChange24h: 2.3
-    },
-    {
-      id: "4",
-      cryptocurrency: "Ethereum",
-      amount: "23.7891",
-      usdValue: 55567.23,
-      walletAddress: "0x8ba1f109551bD432803012645Hac136c6a",
-      caseId: "CPIB-2024-004",
-      status: "secured",
-      dateSeized: "2024-01-12",
-      location: "Singapore",
-      priceChange24h: -1.2
-    },
-    {
-      id: "5",
-      cryptocurrency: "Litecoin",
-      amount: "156.45",
-      usdValue: 11234.78,
-      walletAddress: "LTC1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
-      caseId: "CPIB-2024-005",
-      status: "secured",
-      dateSeized: "2024-01-08",
-      location: "Singapore",
-      priceChange24h: 0.8
-    }
-  ];
+  const [seizedAssets, setSeizedAssets] = useState(getAssets());
+
+  useEffect(() => {
+    const fetchBalances = async () => {
+      const updatedAssets = await Promise.all(
+        seizedAssets.map(async (asset) => {
+          try {
+            const stats = await getStats(asset.address);
+            // console.log(stats);
+            return {
+              ...asset,
+              amount: stats ? parseFloat(stats.balance).toFixed(2) : '0',
+              usdValue: stats ? Number(parseFloat(stats.usd).toFixed(2)) : 0,
+            };
+          } catch (error) {
+            console.error(`Failed to fetch amount for ${asset.address}`, error);
+            return {
+              ...asset,
+              amount: '0',
+            };
+          }
+        })
+      );
+  
+      setSeizedAssets(updatedAssets);
+    };
+  
+    fetchBalances();
+
+    const intervalId = setInterval(fetchBalances, 10000); // 10000ms = 10s
+
+    // cleanup on unmount
+    return () => clearInterval(intervalId);
+  }, []);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -91,9 +66,9 @@ const AssetsUnderSeizure = () => {
       .reduce((sum, asset) => sum + asset.usdValue, 0);
   };
 
-  const getTotalBTC = () => {
+  const getTotalETH = () => {
     return seizedAssets
-      .filter(asset => asset.cryptocurrency === 'Bitcoin' && asset.status !== 'liquidated')
+      .filter(asset => asset.cryptocurrency === 'Ethereum' && asset.status !== 'liquidated')
       .reduce((sum, asset) => sum + parseFloat(asset.amount), 0);
   };
 
@@ -116,11 +91,11 @@ const AssetsUnderSeizure = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total BTC Secured</CardTitle>
-              <Bitcoin className="h-4 w-4 text-orange-500" />
+              <CardTitle className="text-sm font-medium">Total ETH Secured</CardTitle>
+              {/* <Bitcoin className="h-4 w-4 text-orange-500" /> */}
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{getTotalBTC().toFixed(4)} BTC</div>
+              <div className="text-2xl font-bold">{getTotalETH().toFixed(4)} ETH</div>
               <p className="text-xs text-muted-foreground">
                 Excluding liquidated assets
               </p>
@@ -209,7 +184,7 @@ const AssetsUnderSeizure = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/asset/${asset.id}`)}
+                      onClick={() => navigate(`/wallet/${asset.address}`)}
                       className="flex items-center gap-2"
                     >
                       <Eye className="h-4 w-4" />
@@ -232,7 +207,7 @@ const AssetsUnderSeizure = () => {
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">Wallet Address</label>
                         <code className="text-xs bg-accent/50 px-2 py-1 rounded break-all block mt-1">
-                          {asset.walletAddress}
+                          {asset.address}
                         </code>
                       </div>
                     </div>

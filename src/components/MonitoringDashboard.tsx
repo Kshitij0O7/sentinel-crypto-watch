@@ -184,6 +184,19 @@ const MonitoringDashboard = () => {
     <div className="space-y-6">
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => navigate("/cases")}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Cases</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">2</div>
+            <p className="text-xs text-muted-foreground">
+              Click to manage cases
+            </p>
+          </CardContent>
+        </Card>
+
         <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => navigate("/wallets")}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Monitored Wallets</CardTitle>
@@ -206,19 +219,6 @@ const MonitoringDashboard = () => {
             <div className="text-2xl font-bold text-warning">2</div>
             <p className="text-xs text-muted-foreground">
               Click to view all activity
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => navigate("/cases")}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Cases</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">2</div>
-            <p className="text-xs text-muted-foreground">
-              Click to manage cases
             </p>
           </CardContent>
         </Card>

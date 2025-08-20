@@ -66,8 +66,8 @@ const CaseDetail = () => {
         },
         {
           id: "2", 
-          address: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
-          blockchain: "Bitcoin",
+          address: "0x8C8D7C46219D9205f056f28fee5950aD564d7465",
+          blockchain: "Ethereum",
           privateLabel: "Secondary Wallet",
           dateSeized: "2024-01-16",
           dateAdded: "2024-01-16",

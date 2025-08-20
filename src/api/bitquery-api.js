@@ -53,6 +53,7 @@ export const getStats = async (address) => {
             where: {BalanceUpdate: {Address: {is: "${address}"}}, Currency: {SmartContract: {is: "0x"}}}
             ) {
             sum(of: BalanceUpdate_Amount, selectWhere: {gt: "0"})
+            usd:sum(of: BalanceUpdate_AmountInUSD, selectWhere: {gt: "0"})
             }
             transactions: Transactions(
             where: {TransactionStatus: {Success: true}, Transaction: {From: {is: "${address}"}}}
@@ -76,11 +77,12 @@ export const getStats = async (address) => {
     // console.log(response.data);
 
     const balance = response.data.data.EVM.balance[0].sum;
+    const usd = response.data.data.EVM.balance[0].usd;
     const token = response.data.data.EVM.tokens[0].uniq;
     const transactionRecord = response.data.data.EVM.transactions[0].count;
     const lastTransaction = response.data.data.EVM.lastTransaction[0].Block.Date;
 
-    return {balance, token, transactionRecord, lastTransaction};
+    return {balance, usd, token, transactionRecord, lastTransaction};
 }
 
 export const getRecentTransactions = async (addresses) => {
