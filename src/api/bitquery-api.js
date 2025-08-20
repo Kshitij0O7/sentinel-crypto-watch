@@ -1,5 +1,7 @@
 import axios from "axios";
-
+// import 'dotenv/config'
+// console.log(process.env)
+const apiKey = import.meta.env.VITE_API_KEY;
 let data = {
    "query": "",
    "variables": "{}"
@@ -11,7 +13,7 @@ let config = {
    url: 'https://streaming.bitquery.io/graphql',
    headers: { 
       'Content-Type': 'application/json', 
-      'Authorization': 'Bearer <Bitquery Access Token>'
+      'Authorization': `Bearer ${apiKey}`
    },
    data : data
 };
@@ -30,6 +32,7 @@ export const getTotalAssets = async (addresses) => {
     `;
     config.data.query = query;
     // console.log(config);
+    // console.log(apiKey);
 
     const response = await axios.request(config);
     const result = response.data.data.EVM.BalanceUpdates[0].balance;
