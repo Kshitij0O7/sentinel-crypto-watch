@@ -170,16 +170,6 @@ const AssetsUnderSeizure = () => {
                       <span className="text-xl font-bold text-primary">
                         ${asset.usdValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </span>
-                      <div className="flex items-center gap-1">
-                        {asset.priceChange24h >= 0 ? (
-                          <TrendingUp className="h-4 w-4 text-green-600" />
-                        ) : (
-                          <TrendingDown className="h-4 w-4 text-red-600" />
-                        )}
-                        <span className={`text-sm ${asset.priceChange24h >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {asset.priceChange24h >= 0 ? '+' : ''}{asset.priceChange24h}%
-                        </span>
-                      </div>
                     </div>
                     <Button
                       variant="outline"
@@ -225,15 +215,6 @@ const AssetsUnderSeizure = () => {
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Location</label>
                           <p>{asset.location}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <label className="text-sm font-medium text-muted-foreground">24h Price Change</label>
-                          <p className={asset.priceChange24h >= 0 ? 'text-green-600' : 'text-red-600'}>
-                            {asset.priceChange24h >= 0 ? '+' : ''}{asset.priceChange24h}%
-                          </p>
                         </div>
                       </div>
                     </div>

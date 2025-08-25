@@ -106,7 +106,7 @@ export const getRecentTransactions = async (addresses) => {
             }
             Transaction {
                 Hash
-                Gas
+                GasPrice
             }
             }
         }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,79 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Clock, Search, ExternalLink, Activity, AlertCircle, CheckCircle, Loader } from "lucide-react";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
+import {getRecentTransactions} from "@/api/bitquery-api";
+import {getWallets} from "@/api/wallets";
 
 const RecentActivity = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-
-  // Mock data for recent transactions
-  const [transactions] = useState([
-    {
-      id: "1",
-      hash: "0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f",
-      from: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
-      to: "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
-      amount: "0.0001",
-      currency: "BTC",
-      timestamp: "2024-01-20 14:23:15",
-      status: "confirmed",
-      blockHeight: 825643,
-      transactionFee: "0.00001234 BTC",
-      caseId: "CPIB-2024-001"
-    },
-    {
-      id: "2",
-      hash: "0x2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g",
-      from: "0x742d35Cc6634C0532925a3b8D5e7891db9F0f8c",
-      to: "0x8ba1f109551bD432803012645Hac136c6a",
-      amount: "0.5",
-      currency: "ETH", 
-      timestamp: "2024-01-19 09:15:42",
-      status: "confirmed",
-      blockHeight: 18954321,
-      gasUsed: "21000",
-      transactionFee: "0.002 ETH",
-      caseId: "CPIB-2024-002"
-    },
-    {
-      id: "3",
-      hash: "0x3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h",
-      from: "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy",
-      to: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
-      amount: "1.2534",
-      currency: "BTC",
-      timestamp: "2024-01-18 16:45:23",
-      status: "pending",
-      transactionFee: "0.00002156 BTC",
-      caseId: "CPIB-2024-003"
-    },
-    {
-      id: "4",
-      hash: "0x4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i",
-      from: "0x8ba1f109551bD432803012645Hac136c6a",
-      to: "0x742d35Cc6634C0532925a3b8D5e7891db9F0f8c",
-      amount: "10.0",
-      currency: "ETH",
-      timestamp: "2024-01-17 11:32:18",
-      status: "failed",
-      gasUsed: "21000",
-      transactionFee: "0.001 ETH",
-      caseId: "CPIB-2024-004"
-    },
-    {
-      id: "5",
-      hash: "0x5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j",
-      from: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
-      to: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
-      amount: "0.0852",
-      currency: "BTC",
-      timestamp: "2024-01-16 08:15:33",
-      status: "confirmed",
-      blockHeight: 825621,
-      transactionFee: "0.00001845 BTC",
-      caseId: "CPIB-2024-005"
-    }
-  ]);
+  const [transactions, setRecentTransactions] = useState([]);
 
   const filteredTransactions = transactions.filter(tx => 
     tx.hash.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -89,12 +23,44 @@ const RecentActivity = () => {
     tx.currency.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  useEffect(()=>{
+    const fetchTransactions = async () => {
+      try{
+        const wallets = getWallets();
+        const addresses = wallets.map(wallet => wallet.address);
+        const result = await getRecentTransactions(JSON.stringify(addresses));
+        const formattedTransactions = result.map((tx, index) => ({
+          id: (index + 1).toString(), // or use tx.Transaction.Hash if you want a unique id
+          hash: tx.Transaction.Hash,
+          from: tx.Transfer.Sender,
+          to: tx.Transfer.Receiver,
+          amount: parseFloat(tx.Transfer.Amount).toFixed(6), // adjust decimals if needed
+          currency: 'ETH', // or determine dynamically if you have multiple currencies
+          timestamp: tx.Block.Time,
+          status: tx.Transfer.Success ? 'confirmed' : 'failed',
+          blockHeight: tx.Block.Number,
+          transactionFee: `${tx.Transaction.GasPrice} ETH`,
+          caseId: "CPIB-2024-001"
+        }));
+        
+        setRecentTransactions(formattedTransactions);        
+      } catch (error){
+        console.error('Error getting Recent Transactions:', error);
+      }
+    };
+
+    fetchTransactions();
+
+    const intervalId = setInterval(fetchTransactions, 10000); // 10000ms = 10s
+
+    // cleanup on unmount
+    return () => clearInterval(intervalId);
+  },[]);
+
   const getStatusIcon = (status) => {
     switch (status) {
       case 'confirmed':
         return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'pending':
-        return <Loader className="h-4 w-4 text-yellow-600 animate-spin" />;
       case 'failed':
         return <AlertCircle className="h-4 w-4 text-red-600" />;
       default:
@@ -106,8 +72,6 @@ const RecentActivity = () => {
     switch (status) {
       case 'confirmed':
         return 'default';
-      case 'pending':
-        return 'secondary';
       case 'failed':
         return 'destructive';
       default:
@@ -146,51 +110,6 @@ const RecentActivity = () => {
               <div className="text-2xl font-bold">{transactions.length}</div>
               <p className="text-xs text-muted-foreground">
                 Last 30 days
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Confirmed</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                {transactions.filter(tx => tx.status === 'confirmed').length}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Successful transactions
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending</CardTitle>
-              <Loader className="h-4 w-4 text-yellow-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">
-                {transactions.filter(tx => tx.status === 'pending').length}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Awaiting confirmation
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Failed</CardTitle>
-              <AlertCircle className="h-4 w-4 text-red-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">
-                {transactions.filter(tx => tx.status === 'failed').length}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Failed transactions
               </p>
             </CardContent>
           </Card>

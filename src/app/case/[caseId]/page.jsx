@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Calendar, MapPin, Wallet, DollarSign, Activity, AlertTriangle, Eye, Users } from "lucide-react";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
+import {getTotalAssets, getStats, getRecentTransactions} from "@/api/bitquery-api";
 
 const CaseDetail = () => {
   const { caseId } = useParams();
@@ -16,6 +17,7 @@ const CaseDetail = () => {
   const [caseData, setCaseData] = useState(null);
   const [selectedAlertGroupId, setSelectedAlertGroupId] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Mock data for alert groups
   const alertGroups = [
@@ -50,7 +52,7 @@ const CaseDetail = () => {
       dateAdded: "2024-01-15",
       status: "active",
       investigator: "Detective Lim Wei Ming",
-      totalValue: "45.2341",
+      totalValue: "0",
       currency: "ETH",
       alertGroupId: "1",
       addresses: [
@@ -61,8 +63,8 @@ const CaseDetail = () => {
           privateLabel: "Suspect Primary Wallet",
           dateSeized: "2024-01-15",
           dateAdded: "2024-01-15",
-          balance: "25.1234",
-          lastActivity: "2024-01-20"
+          balance: "0",
+          lastActivity: ""
         },
         {
           id: "2", 
@@ -71,32 +73,11 @@ const CaseDetail = () => {
           privateLabel: "Secondary Wallet",
           dateSeized: "2024-01-16",
           dateAdded: "2024-01-16",
-          balance: "0.5842",
-          lastActivity: "2024-01-19"
+          balance: "0",
+          lastActivity: ""
         }
       ],
-      recentTransactions: [
-        {
-          id: "1",
-          hash: "0xabc123def456...",
-          from: "0xcf1DC766Fc2c62bef0b67A8De666c8e67aCf35f6",
-          to: "0x742d35Cc6634C0532925a3b8D5e7891db9F0f8c",
-          amount: "5.0000",
-          currency: "ETH",
-          timestamp: "2024-01-20 14:23:15",
-          status: "confirmed"
-        },
-        {
-          id: "2",
-          hash: "0xdef456ghi789...",
-          from: "0x742d35Cc6634C0532925a3b8D5e7891db9F0f8c",
-          to: "0xcf1DC766Fc2c62bef0b67A8De666c8e67aCf35f6",
-          amount: "15.2341",
-          currency: "ETH",
-          timestamp: "2024-01-19 09:15:42",
-          status: "confirmed"
-        }
-      ],
+      recentTransactions: [],
       alerts: [
         {
           id: "1",
@@ -124,7 +105,7 @@ const CaseDetail = () => {
       dateAdded: "2024-01-18",
       status: "under_review",
       investigator: "Detective Sarah Chen",
-      totalValue: "128.7562",
+      totalValue: "0",
       currency: "ETH",
       alertGroupId: "2",
       addresses: [
@@ -135,22 +116,11 @@ const CaseDetail = () => {
           privateLabel: "Exchange Deposit Wallet",
           dateSeized: "2024-01-18",
           dateAdded: "2024-01-18",
-          balance: "128.7562",
-          lastActivity: "2024-01-21"
+          balance: "0",
+          lastActivity: ""
         }
       ],
-      recentTransactions: [
-        {
-          id: "3",
-          hash: "0xghi789jkl012...",
-          from: "0x8C8D7C46219D9205f056f28fee5950aD564d7465",
-          to: "0x1234567890abcdef...",
-          amount: "50.0000",
-          currency: "ETH",
-          timestamp: "2024-01-21 10:30:45",
-          status: "confirmed"
-        }
-      ],
+      recentTransactions: [],
       alerts: [
         {
           id: "3",
@@ -164,12 +134,72 @@ const CaseDetail = () => {
   ];
 
   useEffect(() => {
-    const foundCase = mockCases.find(c => c.caseId === caseId);
-    setCaseData(foundCase);
-    if (foundCase?.alertGroupId) {
-      setSelectedAlertGroupId(foundCase.alertGroupId);
-    }
-  }, [caseId]);
+    const getInfo = async () => {
+      // Find the case by caseId
+      setLoading(true)
+      const foundCase = mockCases.find(c => c.caseId === caseId);
+      if (!foundCase) {
+        setLoading(false);
+        return
+      };
+  
+      // Update wallet info with stats
+      const updatedAddresses = await Promise.all(
+        foundCase.addresses.map(async (wallet) => {
+          try {
+            const stats = await getStats(wallet.address); // await if getStats is async
+            return {
+              ...wallet,
+              balance: stats ? parseFloat(stats?.balance).toFixed(2) : '0',
+              lastActivity: stats?.lastTransaction || '',
+            };
+          } catch (error) {
+            console.error(`Failed to fetch balance for ${wallet.address}`, error);
+            return {
+              ...wallet,
+              balance: '0',
+              lastActivity: '',
+            };
+          }
+        })
+      );
+  
+      try {
+        const addresses = updatedAddresses.map(wallet => wallet.address);
+        const updatedValue = await getTotalAssets(JSON.stringify(addresses));
+  
+        const transactions = await getRecentTransactions(JSON.stringify(addresses));
+        const formattedTransactions = transactions.map((tx, index) => ({
+          id: (index + 1).toString(), // or use tx.Transaction.Hash if you want a unique id
+          hash: tx.Transaction.Hash,
+          from: tx.Transfer.Sender,
+          to: tx.Transfer.Receiver,
+          amount: parseFloat(tx.Transfer.Amount).toFixed(6), // adjust decimals if needed
+          currency: 'ETH', // or determine dynamically if you have multiple currencies
+          timestamp: tx.Block.Time,
+          status: tx.Transfer.Success ? 'confirmed' : 'failed',
+        }));
+        const updatedCase = {
+          ...foundCase,
+          totalValue: parseFloat(updatedValue).toFixed(2),
+          addresses: updatedAddresses,
+          recentTransactions: formattedTransactions,
+        };
+    
+        setCaseData(updatedCase);
+        // console.log(updatedCase);
+        if (updatedCase.alertGroupId) {
+          setSelectedAlertGroupId(updatedCase.alertGroupId);
+        }
+      } catch (error) {
+        console.error(`Failed to fetch case info:`, error);
+      } finally{
+        setLoading(false);
+      };
+      }
+  
+    getInfo();
+  }, [caseId]);  
 
   const handleAssociateAlertGroup = () => {
     if (!selectedAlertGroupId) {
@@ -201,6 +231,10 @@ const CaseDetail = () => {
     if (!caseData?.alertGroupId) return null;
     return alertGroups.find(g => g.id === caseData.alertGroupId);
   };
+
+  if (loading) {
+    return <div className="w-full mx-auto text-center">Loading case data...</div>; // or a spinner
+  }
 
   if (!caseData) {
     return (

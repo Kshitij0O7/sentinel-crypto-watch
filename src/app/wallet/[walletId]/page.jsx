@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import jsPDF from "jspdf";
 import {getStats, getTransactionHistory, getHoldings} from '@/api/bitquery-api';
 import { symbol } from "zod";
 
@@ -92,40 +93,6 @@ const WalletDetails = () => {
     return () => clearInterval(intervalId);
   }, [walletId]);
 
-  // Mock token holdings data
-  // const tokenHoldings = [
-  //   {
-  //     symbol: "BTC",
-  //     name: "Bitcoin",
-  //     balance: "0.5842",
-  //     value: "$25,423.15",
-  //   },
-  //   {
-  //     symbol: "ETH",
-  //     name: "Ethereum",
-  //     balance: "2.456",
-  //     value: "$5,234.67",
-  //     contractAddress: "0xa0b86a33e6ec92d0fb3fb5b5c0c1d8f9c3a6e7d4",
-  //     decimals: 18
-  //   },
-  //   {
-  //     symbol: "USDT",
-  //     name: "Tether",
-  //     balance: "1,250.00",
-  //     value: "$1,250.00",
-  //     contractAddress: "0xdac17f958d2ee523a2206206994597c13d831ec7",
-  //     decimals: 6
-  //   },
-  //   {
-  //     symbol: "USDC",
-  //     name: "USD Coin",
-  //     balance: "875.50",
-  //     value: "$875.50",
-  //     contractAddress: "0xa0b86a33e6ec92d0fb3fb5b5c0c1d8f9c3a6e7d4",
-  //     decimals: 6
-  //   }
-  // ];
-
   const [tokenHoldings, setTokenHolding] = useState([]);
 
   useEffect(()=>{
@@ -154,6 +121,31 @@ const WalletDetails = () => {
     // cleanup on unmount
     return () => clearInterval(intervalId);
   }, [walletId]);
+
+  const generateBalanceReport = () => {
+    if (!tokenHoldings.length) {
+      toast({
+        title: "No Data",
+        description: "Token holdings are empty, cannot generate report.",
+      });
+      return;
+    }
+  
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text("Balance Report", 14, 20);
+  
+    doc.setFontSize(12);
+    let y = 30;
+    tokenHoldings.forEach((token, index) => {
+      doc.text(`${index + 1}. ${token.name} (${token.symbol})`, 14, y);
+      doc.text(`Balance: ${token.balance}`, 100, y);
+      doc.text(`Value: $${token.value}`, 140, y);
+      y += 10;
+    });
+  
+    doc.save(`balance-report-${walletDetails.address}.pdf`);
+  };
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
@@ -240,6 +232,16 @@ const WalletDetails = () => {
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Last Activity</label>
                   <p className="mt-1">{walletDetails.lastActivity || 'No recent activity'}</p>
+                </div>
+                <div>
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={generateBalanceReport}
+                  >
+                    Download Balance Report
+                </Button>
                 </div>
               </div>
             </div>

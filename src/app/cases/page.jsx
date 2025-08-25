@@ -17,7 +17,7 @@ const ManageCases = () => {
   // Form states for new address
   const [newAddress, setNewAddress] = useState({
     address: "",
-    blockchain: "bitcoin",
+    blockchain: "ethereum",
     privateLabel: "",
     dateSeized: ""
   });
@@ -47,11 +47,11 @@ const ManageCases = () => {
     {
       id: "1",
       groupId: "1",
-      address: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+      address: "0xcf1DC766Fc2c62bef0b67A8De666c8e67aCf35f6",
       caseId: "CPIB-2024-001",
       transactionHash: "abc123def456ghi789",
       amount: "0.5842",
-      currency: "BTC",
+      currency: "ETH",
       direction: "out",
       timestamp: "2024-01-20 14:23:15",
       status: "new"
@@ -59,7 +59,7 @@ const ManageCases = () => {
     {
       id: "2",
       groupId: "1",
-      address: "0x742d35Cc6634C0532925a3b8D5e7891db9F0f8c",
+      address: "0x8C8D7C46219D9205f056f28fee5950aD564d7465",
       caseId: "CPIB-2024-002",
       transactionHash: "def456ghi789jkl012",
       amount: "15.2341",
@@ -71,11 +71,11 @@ const ManageCases = () => {
     {
       id: "3",
       groupId: "2",
-      address: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+      address: "0x8C8D7C46219D9205f056f28fee5950aD564d7465",
       caseId: "CPIB-2024-001",
       transactionHash: "ghi789jkl012mno345",
       amount: "2.1000",
-      currency: "BTC",
+      currency: "ETH",
       direction: "out",
       timestamp: "2024-01-18 16:45:30",
       status: "resolved"
@@ -94,8 +94,8 @@ const ManageCases = () => {
       addresses: [
         {
           id: "1",
-          address: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
-          blockchain: "Bitcoin",
+          address: "0xcf1DC766Fc2c62bef0b67A8De666c8e67aCf35f6",
+          blockchain: "Ethereum",
           privateLabel: "Suspect Primary Wallet",
           dateSeized: "2024-01-15",
           dateAdded: "2024-01-15"
@@ -112,7 +112,7 @@ const ManageCases = () => {
       addresses: [
         {
           id: "2",
-          address: "0x742d35Cc6634C0532925a3b8D5e7891db9F0f8c",
+          address: "0x8C8D7C46219D9205f056f28fee5950aD564d7465",
           blockchain: "Ethereum",
           dateSeized: "2024-01-18",
           dateAdded: "2024-01-18"
@@ -121,16 +121,7 @@ const ManageCases = () => {
     }
   ]);
 
-  const blockchainOptions = [
-    "Bitcoin", "Ethereum", "Binance Smart Chain", "Polygon", "Arbitrum", 
-    "Avalanche", "Solana", "Cardano", "Litecoin", "Dogecoin", "Dash",
-    "Ethereum Classic", "Ethereum PoW", "ZCash", "Bitcoin Cash", "Bitcoin SV",
-    "Algorand", "Binance DEX", "Celo", "Conflux", "Hedera Hashgraph",
-    "EOS", "TRON", "Beacon Chain Ethereum 2.0", "Optimism", "Fantom",
-    "Cronos", "NEAR Protocol", "Harmony", "Moonbeam", "Moonriver",
-    "Kusama", "Polkadot", "Cosmos Hub", "Osmosis", "Terra", "THORChain",
-    "Klaytn", "Zilliqa", "Waves", "Stellar"
-  ];
+  const blockchainOptions = ["Ethereum"];
 
   const handleAddEmailToGroup = (groupId, email) => {
     if (!email || !email.includes('@')) {
@@ -192,7 +183,7 @@ const ManageCases = () => {
         : case_
     ));
 
-    setNewAddress({ address: "", blockchain: "bitcoin", privateLabel: "", dateSeized: "" });
+    setNewAddress({ address: "", blockchain: "ethereum", privateLabel: "", dateSeized: "" });
     setSelectedCaseId("");
     setShowAddressForm(false);
     
