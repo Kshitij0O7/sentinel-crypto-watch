@@ -9,6 +9,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, Mail, ArrowLeft, Calendar, AlertTriangle, X, Trash2, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
+import { getCases } from "@/api/case-api";
+import { updateCase, deleteCase } from "@/api/case-api";
 
 const ManageCases = () => {
   const { toast } = useToast();
@@ -17,7 +19,7 @@ const ManageCases = () => {
   // Form states for new address
   const [newAddress, setNewAddress] = useState({
     address: "",
-    blockchain: "ethereum",
+    blockchain: "Ethereum",
     privateLabel: "",
     dateSeized: ""
   });
@@ -82,44 +84,7 @@ const ManageCases = () => {
     }
   ]);
 
-  // Mock data for cases
-  const [cases, setCases] = useState([
-    {
-      id: "1",
-      name: "Crypto Fraud Investigation Alpha",
-      caseId: "CPIB-2024-001",
-      description: "Investigation into suspected cryptocurrency fraud involving multiple wallets and exchanges.",
-      createdDate: "2024-01-15",
-      dateAdded: "2024-01-15",
-      addresses: [
-        {
-          id: "1",
-          address: "0xcf1DC766Fc2c62bef0b67A8De666c8e67aCf35f6",
-          blockchain: "Ethereum",
-          privateLabel: "Suspect Primary Wallet",
-          dateSeized: "2024-01-15",
-          dateAdded: "2024-01-15"
-        }
-      ]
-    },
-    {
-      id: "2",
-      name: "Money Laundering Case Beta",
-      caseId: "CPIB-2024-002",
-      description: "Complex money laundering scheme involving DeFi protocols and multiple blockchain networks.",
-      createdDate: "2024-01-18",
-      dateAdded: "2024-01-18",
-      addresses: [
-        {
-          id: "2",
-          address: "0x8C8D7C46219D9205f056f28fee5950aD564d7465",
-          blockchain: "Ethereum",
-          dateSeized: "2024-01-18",
-          dateAdded: "2024-01-18"
-        }
-      ]
-    }
-  ]);
+  const [cases, setCases] = useState(getCases());
 
   const blockchainOptions = ["Ethereum"];
 
@@ -167,23 +132,34 @@ const ManageCases = () => {
       });
       return;
     }
+    // console.log(cases.selectedCaseId);
+    const selectedCase = cases.find(c => c.id === selectedCaseId);
+
+    if (!selectedCase) {
+      console.error("Selected case not found");
+      return;
+    }
 
     const addressData = {
-      id: Date.now().toString(),
+      id: (selectedCase.addresses.length + 1).toString(),
       address: newAddress.address,
+      balance: "0",
       blockchain: newAddress.blockchain,
       privateLabel: newAddress.privateLabel || undefined,
       dateSeized: newAddress.dateSeized || new Date().toISOString().split('T')[0],
-      dateAdded: new Date().toISOString().split('T')[0]
+      dateAdded: new Date().toISOString().split('T')[0],
+      lastActivity: "",
     };
 
+    const updatedCase = {...selectedCase, addresses:[...selectedCase.addresses, addressData]};
+    updateCase(updatedCase);
     setCases(cases.map(case_ => 
       case_.id === selectedCaseId
         ? { ...case_, addresses: [...case_.addresses, addressData] }
         : case_
     ));
 
-    setNewAddress({ address: "", blockchain: "ethereum", privateLabel: "", dateSeized: "" });
+    setNewAddress({ address: "", blockchain: "Ethereum", privateLabel: "", dateSeized: "" });
     setSelectedCaseId("");
     setShowAddressForm(false);
     
@@ -195,6 +171,7 @@ const ManageCases = () => {
 
   const handleDeleteCase = (caseId) => {
     const caseToDelete = cases.find(c => c.id === caseId);
+    deleteCase(caseId);
     setCases(cases.filter(c => c.id !== caseId));
     
     toast({
@@ -204,11 +181,14 @@ const ManageCases = () => {
   };
 
   const handleDeleteAddress = (caseId, addressId) => {
+    const case_ = cases.find(c => c.id === caseId);
+    const updatedCase = {...case_, addresses: case_.addresses.filter(addr => addr.id !== addressId)};
     setCases(cases.map(case_ => 
       case_.id === caseId
         ? { ...case_, addresses: case_.addresses.filter(addr => addr.id !== addressId) }
         : case_
     ));
+    updateCase(updatedCase);
     
     toast({
       title: "Address Deleted",

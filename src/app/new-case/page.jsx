@@ -8,18 +8,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Bell, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
+import { getCases, addCase } from "@/api/case-api";
 
 const NewCase = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
   // Form states for new case
+  const cases = useState(getCases());
   const [newCase, setNewCase] = useState({
     name: "",
     caseId: "",
     description: "",
     address: "",
-    blockchain: "Bitcoin",
+    blockchain: "Ethereum",
     alertGroupId: ""
   });
 
@@ -45,16 +47,7 @@ const NewCase = () => {
     }
   ]);
 
-  const blockchainOptions = [
-    "Bitcoin", "Ethereum", "Binance Smart Chain", "Polygon", "Arbitrum", 
-    "Avalanche", "Solana", "Cardano", "Litecoin", "Dogecoin", "Dash",
-    "Ethereum Classic", "Ethereum PoW", "ZCash", "Bitcoin Cash", "Bitcoin SV",
-    "Algorand", "Binance DEX", "Celo", "Conflux", "Hedera Hashgraph",
-    "EOS", "TRON", "Beacon Chain Ethereum 2.0", "Optimism", "Fantom",
-    "Cronos", "NEAR Protocol", "Harmony", "Moonbeam", "Moonriver",
-    "Kusama", "Polkadot", "Cosmos Hub", "Osmosis", "Terra", "THORChain",
-    "Klaytn", "Zilliqa", "Waves", "Stellar"
-  ];
+  const blockchainOptions = ["Ethereum"];
 
   const handleCreateCase = () => {
     if (!newCase.name || !newCase.caseId) {
@@ -67,24 +60,46 @@ const NewCase = () => {
     }
 
     const addresses = newCase.address ? [{
-      id: Date.now().toString(),
+      id: (newCase.address.length + 1).toString(),
       address: newCase.address,
       blockchain: newCase.blockchain,
-      dateSeized: new Date().toISOString().split('T')[0]
+      balance: "0",
+      privateLabel: "Primary Suspect",
+      dateSeized: new Date().toISOString().split('T')[0],
+      dateAdded: new Date().toISOString().split('T')[0],
+      lastActivity: "",
     }] : [];
 
+    // const caseData = {
+    //   id: (cases.length + 1).toString(),
+    //   name: newCase.name,
+    //   caseId: newCase.caseId,
+    //   description: newCase.description,
+    //   createdDate: new Date().toISOString().split('T')[0],
+    //   addresses,
+    //   alertGroupId: newCase.alertGroupId || undefined
+    // };
+
     const caseData = {
-      id: Date.now().toString(),
+      id: (cases.length + 1).toString(),
       name: newCase.name,
       caseId: newCase.caseId,
       description: newCase.description,
       createdDate: new Date().toISOString().split('T')[0],
+      dateAdded: new Date().toISOString().split('T')[0],
+      status: "active",
+      investigator: "Detective Lim Wei Ming",
+      totalValue: "0",
+      currency: "ETH",
+      alertGroupId: newCase.alertGroupId || undefined,
       addresses,
-      alertGroupId: newCase.alertGroupId || undefined
+      recentTransactions: [],
+      alerts: [alertGroups.find(alert => newCase.alertGroupId == alert.id)]
     };
 
     // In real app, this would save to a store/database
-    setNewCase({ name: "", caseId: "", description: "", address: "", blockchain: "Bitcoin", alertGroupId: "" });
+    addCase(caseData);
+    setNewCase({ name: "", caseId: "", description: "", address: "", blockchain: "Ethereum", alertGroupId: "" });
     
     toast({
       title: "Case Created",

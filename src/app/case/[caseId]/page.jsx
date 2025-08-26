@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Calendar, MapPin, Wallet, DollarSign, Activity, AlertTriangle, Eye, Users } from "lucide-react";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
 import {getTotalAssets, getStats, getRecentTransactions} from "@/api/bitquery-api";
+import { getCases, getCase } from "@/api/case-api";
+import { updateCase } from "../../../api/case-api";
 
 const CaseDetail = () => {
   const { caseId } = useParams();
@@ -41,103 +43,12 @@ const CaseDetail = () => {
     }
   ];
 
-  // Mock data - in a real app, this would come from an API
-  const mockCases = [
-    {
-      id: "1",
-      name: "Crypto Fraud Investigation Alpha",
-      caseId: "CPIB-2024-001",
-      description: "Investigation into suspected cryptocurrency fraud involving multiple wallets and exchanges.",
-      createdDate: "2024-01-15",
-      dateAdded: "2024-01-15",
-      status: "active",
-      investigator: "Detective Lim Wei Ming",
-      totalValue: "0",
-      currency: "ETH",
-      alertGroupId: "1",
-      addresses: [
-        {
-          id: "1",
-          address: "0xcf1DC766Fc2c62bef0b67A8De666c8e67aCf35f6",
-          blockchain: "Ethereum",
-          privateLabel: "Suspect Primary Wallet",
-          dateSeized: "2024-01-15",
-          dateAdded: "2024-01-15",
-          balance: "0",
-          lastActivity: ""
-        },
-        {
-          id: "2", 
-          address: "0x8C8D7C46219D9205f056f28fee5950aD564d7465",
-          blockchain: "Ethereum",
-          privateLabel: "Secondary Wallet",
-          dateSeized: "2024-01-16",
-          dateAdded: "2024-01-16",
-          balance: "0",
-          lastActivity: ""
-        }
-      ],
-      recentTransactions: [],
-      alerts: [
-        {
-          id: "1",
-          type: "large_transaction",
-          message: "Large outgoing transaction detected",
-          amount: "5.0000 ETH",
-          timestamp: "2024-01-20 14:23:15",
-          status: "new"
-        },
-        {
-          id: "2",
-          type: "new_address",
-          message: "Transaction to previously unseen address",
-          timestamp: "2024-01-19 16:45:30",
-          status: "acknowledged"
-        }
-      ]
-    },
-    {
-      id: "2",
-      name: "Money Laundering Case Beta", 
-      caseId: "CPIB-2024-002",
-      description: "Complex money laundering scheme involving DeFi protocols and multiple blockchain networks.",
-      createdDate: "2024-01-18",
-      dateAdded: "2024-01-18",
-      status: "under_review",
-      investigator: "Detective Sarah Chen",
-      totalValue: "0",
-      currency: "ETH",
-      alertGroupId: "2",
-      addresses: [
-        {
-          id: "3",
-          address: "0x8C8D7C46219D9205f056f28fee5950aD564d7465",
-          blockchain: "Ethereum",
-          privateLabel: "Exchange Deposit Wallet",
-          dateSeized: "2024-01-18",
-          dateAdded: "2024-01-18",
-          balance: "0",
-          lastActivity: ""
-        }
-      ],
-      recentTransactions: [],
-      alerts: [
-        {
-          id: "3",
-          type: "defi_interaction",
-          message: "DeFi protocol interaction detected",
-          timestamp: "2024-01-21 10:30:45",
-          status: "new"
-        }
-      ]
-    }
-  ];
+  const foundCase = getCase(caseId);
 
   useEffect(() => {
     const getInfo = async () => {
       // Find the case by caseId
       setLoading(true)
-      const foundCase = mockCases.find(c => c.caseId === caseId);
       if (!foundCase) {
         setLoading(false);
         return
@@ -186,8 +97,8 @@ const CaseDetail = () => {
           recentTransactions: formattedTransactions,
         };
     
+        updateCase(updatedCase);
         setCaseData(updatedCase);
-        // console.log(updatedCase);
         if (updatedCase.alertGroupId) {
           setSelectedAlertGroupId(updatedCase.alertGroupId);
         }
