@@ -46,10 +46,8 @@ const MonitoringDashboard = () => {
   
   // Mock existing cases data -> To be replaced by API call to get all cases
   const existingCases = [
-    { id: "CPIB-2024-001", name: "Silk Road Investigation" },
-    { id: "CPIB-2024-002", name: "Ransomware Group Alpha" },
-    { id: "CPIB-2024-003", name: "Money Laundering Operation" },
-    { id: "CPIB-2024-004", name: "Crypto Exchange Fraud" }
+    { id: "CPIB-2024-001", name: "Crypto Exchange Fraud" },
+    { id: "CPIB-2024-002", name: "Money Laundering Operation" },
   ];
 
   // Mock data for demonstration
