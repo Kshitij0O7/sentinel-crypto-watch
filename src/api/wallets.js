@@ -33,8 +33,7 @@ const seizedAssets = [
       caseId: "CPIB-2024-001",
       status: "secured",
       dateSeized: "2024-01-15",
-      location: "Singapore",
-      priceChange24h: 2.3
+      location: "Singapore"
     },
     {
       id: "2",
@@ -45,8 +44,7 @@ const seizedAssets = [
       caseId: "CPIB-2024-002",
       status: "secured",
       dateSeized: "2024-01-18",
-      location: "Singapore",
-      priceChange24h: -1.2
+      location: "Singapore"
     },
 ]
   // Initialize localStorage if empty
@@ -67,38 +65,11 @@ const seizedAssets = [
   }
   
   // Add a new wallet
-  export const addWallet = ({ address, caseId }) => {
-    const wallets = getWallets();
-    const assets = getAssets();
-  
-    const newWallet = {
-      id: (wallets.length + 1).toString(),
-      address,
-      blockchain: "Ethereum",
-      caseId,
-      balance: 0,
-      lastActivity: "",
-      dateAdded: "2024-01-15",
-      status: "active",
-      dateSeized: "2024-01-18",
-    };
-
-    const newAsset = {
-      id: (seizedAssets.length + 1).toString(),
-      cryptocurrency: "Ethereum",
-      amount: "0",
-      usdValue: 106234.67,
-      address: address,
-      caseId: caseId,
-      status: "secured",
-      dateSeized: "2024-01-18",
-      location: "Singapore",
-      priceChange24h: -1.2
-    };
-  
-    wallets.push(newWallet);
-    seizedAssets.push(newAsset);
+  export const addWallet = ( wallets, assets ) => {
     localStorage.setItem("wallets", JSON.stringify(wallets));
     localStorage.setItem("assets", JSON.stringify(assets));
-    return newWallet;
   };
+
+  export const updateAssets = (assets) => {
+    localStorage.setItem("assets", JSON.stringify(assets));
+  }

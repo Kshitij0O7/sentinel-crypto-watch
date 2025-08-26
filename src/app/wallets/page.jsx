@@ -13,6 +13,7 @@ const MonitoredWallets = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("desc");
+  const [loading, setLoading] = useState(true);
 
   // Mock data for monitored wallet addresses
   const [walletAddresses, setWalletAddresses] = useState(getWallets());
@@ -35,6 +36,8 @@ const MonitoredWallets = () => {
         setWalletAddresses(updatedWallets);
       } catch (error) {
         console.error("Error getting wallet stats:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -65,7 +68,9 @@ const MonitoredWallets = () => {
   const activeWallets = walletAddresses.filter(wallet => wallet.status === "active").length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+    <>
+    {loading ? (<div className="w-full mx-auto text-center">Loading wallet data...</div>) : (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted">
       <CryptoMonitoringHeader />
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="mb-6">
@@ -196,6 +201,8 @@ const MonitoredWallets = () => {
         </div>
       </div>
     </div>
+    )}
+    </>
   );
 };
 

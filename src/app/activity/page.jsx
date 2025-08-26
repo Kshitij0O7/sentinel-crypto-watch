@@ -14,6 +14,7 @@ const RecentActivity = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [transactions, setRecentTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const filteredTransactions = transactions.filter(tx => 
     tx.hash.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -46,6 +47,8 @@ const RecentActivity = () => {
         setRecentTransactions(formattedTransactions);        
       } catch (error){
         console.error('Error getting Recent Transactions:', error);
+      } finally{
+        setLoading(false);
       }
     };
 
@@ -88,7 +91,9 @@ const RecentActivity = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+    <>
+    {loading ? (<div className="w-full mx-auto text-center">Loading activity data...</div>) : (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted">
       <CryptoMonitoringHeader />
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="mb-6">
@@ -229,6 +234,8 @@ const RecentActivity = () => {
         </Card>
       </div>
     </div>
+    )}
+    </>
   );
 };
 

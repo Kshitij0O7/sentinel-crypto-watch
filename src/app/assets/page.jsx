@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, DollarSign, Bitcoin, Shield, TrendingUp, TrendingDown, Calendar, MapPin, Eye } from "lucide-react";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
-import { getAssets } from "@/api/wallets";
+import { getAssets, updateAssets } from "@/api/wallets";
 import {getStats} from "@/api/bitquery-api";
 
 const AssetsUnderSeizure = () => {
@@ -13,6 +13,7 @@ const AssetsUnderSeizure = () => {
 
   // Mock data for seized assets
   const [seizedAssets, setSeizedAssets] = useState(getAssets());
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchBalances = async () => {
@@ -31,11 +32,15 @@ const AssetsUnderSeizure = () => {
             return {
               ...asset,
               amount: '0',
+              usdValue: 0,
             };
+          } finally {
+            setLoading(false);
           }
         })
       );
   
+      updateAssets(updatedAssets);
       setSeizedAssets(updatedAssets);
     };
   
@@ -73,7 +78,9 @@ const AssetsUnderSeizure = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+    <>
+    {loading ? (<div className="w-full mx-auto text-center">Loading asset data...</div>) : (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted">
       <CryptoMonitoringHeader />
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex items-center gap-4 mb-6">
@@ -226,6 +233,8 @@ const AssetsUnderSeizure = () => {
         </Card>
       </div>
     </div>
+    )}
+    </>
   );
 };
 

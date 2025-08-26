@@ -9,7 +9,7 @@ import { AlertTriangle, Eye, Plus, Activity, DollarSign, Clock } from "lucide-re
 import { useToast } from "@/hooks/use-toast";
 // import walletsData from "../../wallets.json";
 import {getTotalAssets, getStats, getRecentTransactions} from "@/api/bitquery-api";
-import { getWallets, addWallet } from "@/api/wallets";
+import { getWallets, getAssets, addWallet } from "@/api/wallets";
 
 interface WalletAddress {
   id: string;
@@ -40,15 +40,16 @@ const MonitoringDashboard = () => {
   const navigate = useNavigate();
   const [newAddress, setNewAddress] = useState("");
   const [selectedCase, setSelectedCase] = useState("");
-  const [selectedBlockchain, setSelectedBlockchain] = useState("bitcoin");
+  const [selectedBlockchain, setSelectedBlockchain] = useState("ethereum");
+  const [loading, setLoading] = useState(true);
 
   
   // Mock existing cases data -> To be replaced by API call to get all cases
   const existingCases = [
-    { id: "1", name: "Silk Road Investigation" },
-    { id: "2", name: "Ransomware Group Alpha" },
-    { id: "3", name: "Money Laundering Operation" },
-    { id: "4", name: "Crypto Exchange Fraud" }
+    { id: "CPIB-2024-001", name: "Silk Road Investigation" },
+    { id: "CPIB-2024-002", name: "Ransomware Group Alpha" },
+    { id: "CPIB-2024-003", name: "Money Laundering Operation" },
+    { id: "CPIB-2024-004", name: "Crypto Exchange Fraud" }
   ];
 
   // Mock data for demonstration
@@ -66,7 +67,7 @@ const MonitoringDashboard = () => {
     setSelectedCase(value);
   };
 
-  const handleAddWallet = () => {
+  const handleAddWallet = async () => {
     if (!newAddress || !selectedCase) {
       toast({
         title: "Error",
@@ -77,111 +78,138 @@ const MonitoringDashboard = () => {
     }
   
     // Create new wallet object
-    const wallets = [...walletAddresses]; // copy existing wallets
+    const wallets = [...walletAddresses];
+    const stats = await getStats(newAddress);
     const newWallet: WalletAddress = {
       id: (wallets.length + 1).toString(),
       address: newAddress,
       blockchain: "Ethereum",
       caseId: selectedCase,
-      balance: "0",
-      lastActivity: "",
-      dateAdded: "2024-01-15",
+      balance: stats ? parseFloat(stats.balance).toFixed(2) : '0',
+      lastActivity: stats?.lastActivity,
+      dateAdded: new Date().toISOString().split("T")[0],
       status: "active",
-      dateSeized: new Date().toISOString().split("T")[0],
+      dateSeized: "2024-01-15",
     };
   
     wallets.push(newWallet);
+
+    const seizedAssets = getAssets();
+    const newAsset = {
+      id: (seizedAssets.length + 1).toString(),
+      cryptocurrency: "Ethereum",
+      amount: "0",
+      usdValue: 0,
+      address: newAddress,
+      caseId: selectedCase,
+      status: "secured",
+      dateSeized: "2024-01-18",
+      location: "Singapore",
+    };
+
+    seizedAssets.push(newAsset);
   
-    // Update state first
+    // localStorage.setItem("wallets", JSON.stringify(wallets));
+    addWallet(wallets, seizedAssets);
     setWalletAddresses(wallets);
-  
-    // Sync to localStorage
-    localStorage.setItem("wallets", JSON.stringify(wallets));
+
+    setNewAddress("");
+    setSelectedCase("");
+
+    toast({
+      title: "Address added!",
+      description: `Wallet ${newWallet.address} has been added successfully.`,
+      variant: "success",
+    });
   };
   
-
   useEffect(() => {
-    const fetchBalance = async () => {
+    let isMounted = true; // to avoid state updates on unmounted component
+    const fetchAllData = async () => {
       try {
-        const wallets = walletAddresses.map(wallet => wallet.address);
-        const result = await getTotalAssets(JSON.stringify(wallets));
-        setBalance(parseFloat(result).toFixed(2));
-      } catch (error) {
-        console.error('Error fetching balance:', error);
-      }
-    };
-
-    fetchBalance();
-
-    const intervalId = setInterval(fetchBalance, 10000); // 10000ms = 10s
-
-    // cleanup on unmount
-    return () => clearInterval(intervalId);
-  }, []);
-
-  useEffect(() => {
-    const fetchBalances = async () => {
-      const updatedWallets = await Promise.all(
-        walletAddresses.map(async (wallet) => {
-          try {
-            const stats = await getStats(wallet.address);
-            return {
-              ...wallet,
-              balance: stats ? parseFloat(stats.balance).toFixed(2) : '0',
-            };
-          } catch (error) {
-            console.error(`Failed to fetch balance for ${wallet.address}`, error);
-            return {
-              ...wallet,
-              balance: '0',
-            };
-          }
-        })
-      );
+        const walletAddressesList = walletAddresses.map(wallet => wallet.address);
   
-      setWalletAddresses(updatedWallets);
-    };
+        // Fetch total balance
+        const totalBalancePromise = getTotalAssets(JSON.stringify(walletAddressesList));
   
-    fetchBalances();
-
-    const intervalId = setInterval(fetchBalances, 10000); // 10000ms = 10s
-
-    // cleanup on unmount
-    return () => clearInterval(intervalId);
-  }, []);
-
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      try{
-        const wallets = walletAddresses.map(wallet => wallet.address);
-        const result = await getRecentTransactions(JSON.stringify(wallets));
-        const formattedTransactions: Transaction[] = result.map((tx: any, index: number) => ({
-          id: (index + 1).toString(), // or use tx.Transaction.Hash if you want a unique id
+        // Fetch individual wallet stats
+        const walletStatsPromise = Promise.all(
+          walletAddresses.map(async (wallet) => {
+            try {
+              const stats = await getStats(wallet.address);
+              return {
+                ...wallet,
+                balance: stats ? parseFloat(stats.balance).toFixed(2) : '0',
+                lastActivity: stats?.lastActivity,
+              };
+            } catch (error) {
+              console.error(`Failed to fetch balance for ${wallet.address}`, error);
+              return {
+                ...wallet,
+                balance: '0',
+                lastActivity: "",
+              };
+            }
+          })
+        );
+  
+        // Fetch recent transactions
+        const recentTransactionsPromise = getRecentTransactions(JSON.stringify(walletAddressesList));
+  
+        // Wait for all promises
+        const [totalBalanceResult, walletStatsResult, recentTransactionsResult] = await Promise.all([
+          totalBalancePromise,
+          walletStatsPromise,
+          recentTransactionsPromise,
+        ]);
+  
+        if (!isMounted) return;
+  
+        // Update state
+        setBalance(parseFloat(totalBalanceResult).toFixed(2));
+        setWalletAddresses(walletStatsResult);
+        // localStorage.setItem("wallets", JSON.stringify(walletStatsResult));
+  
+        const formattedTransactions: Transaction[] = recentTransactionsResult.map((tx: any, index: number) => ({
+          id: (index + 1).toString(),
           hash: tx.Transaction.Hash,
           from: tx.Transfer.Sender,
           to: tx.Transfer.Receiver,
-          amount: parseFloat(tx.Transfer.Amount).toFixed(6), // adjust decimals if needed
-          currency: 'ETH', // or determine dynamically if you have multiple currencies
+          amount: parseFloat(tx.Transfer.Amount).toFixed(6),
+          currency: 'ETH',
           timestamp: tx.Block.Time,
           status: tx.Transfer.Success ? 'confirmed' : 'failed',
         }));
-        
-        setRecentTransactions(formattedTransactions);        
-      } catch (error){
-        console.error('Error getting Recent Transactions:', error);
+  
+        setRecentTransactions(formattedTransactions);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        if (isMounted) setLoading(false); // stop loading
       }
     };
-
-    fetchTransactions();
-
-    const intervalId = setInterval(fetchTransactions, 10000); // 10000ms = 10s
-
-    // cleanup on unmount
-    return () => clearInterval(intervalId);
+  
+    // Initial fetch
+    fetchAllData();
+  
+    // Polling every 10s
+    const intervalId = setInterval(fetchAllData, 10000);
+  
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
   }, []);
 
+  // if (loading) {
+  //   return <div className="w-full mx-auto text-center">Loading case data...</div>; // or a spinner
+  // }
+  
+
   return (
-    <div className="space-y-6">
+    <>
+    {loading ? (<div className="w-full mx-auto text-center">Loading data...</div>) :(
+      <div className="space-y-6">
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => navigate("/cases")}>
@@ -385,6 +413,9 @@ const MonitoringDashboard = () => {
         </CardContent>
       </Card>
     </div>
+    )}
+    </>
+    
   );
 };
 

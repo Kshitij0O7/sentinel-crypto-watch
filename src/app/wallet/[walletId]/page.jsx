@@ -33,73 +33,37 @@ const WalletDetails = () => {
     balance: "",
     totalTransactions: 0,
     firstSeen: "2024-01-10",
+    transactions: [],
+    holdings: [],
     lastSeen: "Today",
     tags: ["High Priority", "Investigation Active"]
   });
+  const [loading, setLoading] = useState(true);
 
-  useEffect(()=>{
-    const fetchStats = async () => {
+  useEffect(() => {
+    const fetchAllData = async () => {
       try {
-        const {balance, token, transactionRecord, lastTransaction} = await getStats(walletId); 
-        setWalletDetails({
-          ...walletDetails,
-          balance: balance ? parseFloat(balance).toFixed(2) + ' ETH' : '0 ETH',
-          totalTransactions: transactionRecord,
-          lastActivity: lastTransaction
-        });
-      } catch (error) {
-        console.error("Error getting wallet stats:", error);
-      }
-    };
+        const [stats, txHistory, holdings] = await Promise.all([
+          getStats(walletId),
+          getTransactionHistory(walletId),
+          getHoldings(walletId),
+        ]);
 
-    fetchStats();
-
-    const intervalId = setInterval(fetchStats, 10000); // 10000ms = 10s
-
-    // cleanup on unmount
-    return () => clearInterval(intervalId);
-  }, [walletId]);
-
-  const [transactions, setTransactions] = useState([]);
-
-  useEffect(()=>{
-    const fetchTransactions = async () => {
-      try {
-        const result = await getTransactionHistory(walletId);
-        const formattedTransactions = result.map((tx, index) => ({
-          id: (index + 1).toString(), // or use tx.Transaction.Hash if you want a unique id
+        const formattedTransactions = txHistory.map((tx, index) => ({
+          id: (index + 1).toString(),
           hash: tx.Transaction.Hash,
           from: tx.Transfer.Sender,
           to: tx.Transfer.Receiver,
-          amount: parseFloat(tx.Transfer.Amount).toFixed(6), // adjust decimals if needed
-          currency: 'ETH', // or determine dynamically if you have multiple currencies
+          amount: parseFloat(tx.Transfer.Amount).toFixed(6),
+          currency: 'ETH',
           timestamp: tx.Block.Time,
           status: tx.Transfer.Success ? 'confirmed' : 'failed',
           gasUsed: tx.Transaction.GasPrice,
-          blockHeight: tx.Block.Number
+          blockHeight: tx.Block.Number,
         }));
-        setTransactions(formattedTransactions);
-        // console.log(formattedTransactions);
-      } catch (error) {
-        console.error("Error getting Transactions:", error);
-      }
-    }
-
-    fetchTransactions();
-
-    const intervalId = setInterval(fetchTransactions, 10000); // 10000ms = 10s
-
-    // cleanup on unmount
-    return () => clearInterval(intervalId);
-  }, [walletId]);
-
-  const [tokenHoldings, setTokenHolding] = useState([]);
-
-  useEffect(()=>{
-    const fetchTokenHoldings = async () => {
-      try {
-        const result = await getHoldings(walletId);
-        const formattedHoldings = result.map((tx) => ({
+  
+        // Format and update token holdings
+        const formattedHoldings = holdings.map((tx) => ({
           symbol: tx.Currency.Symbol,
           name: tx.Currency.Name,
           contractAddress: tx.Currency.SmartContract,
@@ -107,23 +71,36 @@ const WalletDetails = () => {
           balance: parseFloat(tx.balance).toFixed(4),
           value: parseFloat(tx.usd).toFixed(4),
         }));
-        setTokenHolding(formattedHoldings);
-        // console.log(formattedTransactions);
+  
+        // Update wallet details
+        setWalletDetails({
+          ...walletDetails,
+          balance: stats.balance ? parseFloat(stats.balance).toFixed(2) + ' ETH' : '0 ETH',
+          totalTransactions: stats.transactionRecord,
+          lastActivity: stats.lastTransaction,
+          transactions: formattedTransactions,
+          holdings: formattedHoldings,
+        });
       } catch (error) {
-        console.error("Error getting Transactions:", error);
+        console.error("Error fetching wallet data:", error);
+        setLoading(false); // hide loading even if some API fails
+      } finally{
+        setLoading(false);
       }
-    }
-
-    fetchTokenHoldings();
-
-    const intervalId = setInterval(fetchTokenHoldings, 10000); // 10000ms = 10s
-
-    // cleanup on unmount
+    };
+  
+    // Fetch data immediately
+    fetchAllData();
+  
+    // Setup interval for updates every 10 seconds
+    const intervalId = setInterval(fetchAllData, 10000);
+  
+    // Cleanup interval on unmount
     return () => clearInterval(intervalId);
   }, [walletId]);
 
   const generateBalanceReport = () => {
-    if (!tokenHoldings.length) {
+    if (!walletDetails.holdings.length) {
       toast({
         title: "No Data",
         description: "Token holdings are empty, cannot generate report.",
@@ -137,7 +114,7 @@ const WalletDetails = () => {
   
     doc.setFontSize(12);
     let y = 30;
-    tokenHoldings.forEach((token, index) => {
+    walletDetails.holdings.forEach((token, index) => {
       doc.text(`${index + 1}. ${token.name} (${token.symbol})`, 14, y);
       doc.text(`Balance: ${token.balance}`, 100, y);
       doc.text(`Value: $${token.value}`, 140, y);
@@ -156,7 +133,9 @@ const WalletDetails = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20">
+    <>
+    {loading ? (<div className="w-full mx-auto text-center">Loading Wallet data...</div>) : (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20">
       <CryptoMonitoringHeader />
       
       <main className="container mx-auto px-4 py-8 space-y-6">
@@ -276,7 +255,7 @@ const WalletDetails = () => {
                 <DropdownMenuContent align="end" className="w-80">
                   <DropdownMenuLabel>Token Holdings</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {tokenHoldings.map((token, index) => (
+                  {walletDetails.holdings.map((token, index) => (
                     <DropdownMenuItem key={index} className="flex-col items-start space-y-1 p-4">
                       <div className="flex items-center justify-between w-full">
                         <div className="flex items-center gap-2">
@@ -312,7 +291,7 @@ const WalletDetails = () => {
               </DropdownMenu>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{tokenHoldings.length}</div>
+              <div className="text-2xl font-bold">{walletDetails.holdings.length}</div>
               <p className="text-xs text-muted-foreground">
                 Digital assets held
               </p>
@@ -356,7 +335,7 @@ const WalletDetails = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {transactions.map((tx) => (
+              {walletDetails.transactions.map((tx) => (
                 <div
                   key={tx.id}
                   className="border rounded-lg p-4 space-y-3"
@@ -417,6 +396,8 @@ const WalletDetails = () => {
         </Card>
       </main>
     </div>
+    )}
+    </>
   );
 };
 
