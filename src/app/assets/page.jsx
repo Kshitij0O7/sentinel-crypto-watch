@@ -5,8 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, DollarSign, Bitcoin, Shield, TrendingUp, TrendingDown, Calendar, MapPin, Eye } from "lucide-react";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
-import { getAssets, updateAssets } from "@/api/wallets";
-import {getStats} from "@/api/bitquery-api";
+import { getAssets, updateAssets, getStats } from "@/api/wallets";
 
 const AssetsUnderSeizure = () => {
   const navigate = useNavigate();
