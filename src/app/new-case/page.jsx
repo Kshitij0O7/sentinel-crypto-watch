@@ -188,7 +188,7 @@ const NewCase = () => {
               {/* Address Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="caseAddress">Wallet Address</Label>
+                  <Label htmlFor="caseAddress">Wallet Address *</Label>
                   <Input
                     id="caseAddress"
                     placeholder="Enter wallet address..."

@@ -125,6 +125,7 @@ const MonitoringDashboard = () => {
     let isMounted = true; // to avoid state updates on unmounted component
     const fetchAllData = async () => {
       try {
+        let walletAddresses = getWallets();
         const walletAddressesList = walletAddresses.map(wallet => wallet.address);
   
         // Fetch total balance

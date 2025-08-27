@@ -72,17 +72,22 @@ export const getStats = async (address) => {
     `;
     config.data.query = query;
 
-    const response = await axios.request(config);
+    try {
+        const response = await axios.request(config);
 
-    // console.log(response.data);
-
-    const balance = response.data.data.EVM.balance[0].sum;
-    const usd = response.data.data.EVM.balance[0].usd;
-    const token = response.data.data.EVM.tokens[0].uniq;
-    const transactionRecord = response.data.data.EVM.transactions[0].count;
-    const lastTransaction = response.data.data.EVM.lastTransaction[0].Block.Date;
-
-    return {balance, usd, token, transactionRecord, lastTransaction};
+        // console.log(response.data);
+    
+        const balance = response.data.data.EVM.balance[0].sum;
+        const usd = response.data.data.EVM.balance[0].usd;
+        const token = response.data.data.EVM.tokens[0].uniq;
+        const transactionRecord = response.data.data.EVM.transactions[0].count;
+        const lastTransaction = response.data.data.EVM.lastTransaction[0].Block.Date;
+    
+        return {balance, usd, token, transactionRecord, lastTransaction};
+    } catch (error) {
+        console.error("Could not get stats for the wallet:", error);
+        return {balance: "0", usd: "0", token: "0", transactionRecord: "0", lastTransaction: ""};
+    }
 }
 
 export const getRecentTransactions = async (addresses) => {
