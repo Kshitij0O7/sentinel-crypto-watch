@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowUpDown, Search, Eye, Wallet, DollarSign, Activity } from "lucide-react";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
 import { getWallets } from "@/api/wallets";
-import {getStats, getTotalAssets} from "@/api/bitquery-api";
+import {getWalletBalance, getWalletLastActivity, getTotalAssets} from "@/api/bitquery-api";
 
 const MonitoredWallets = () => {
   const navigate = useNavigate();
@@ -23,12 +23,15 @@ const MonitoredWallets = () => {
       try {
         const updatedWallets = await Promise.all(
           walletAddresses.map(async (wallet) => {
-            const { balance, lastTransaction } = await getStats(wallet.address);
+            const [balanceData, lastActivity] = await Promise.all([
+              getWalletBalance(wallet.address),
+              getWalletLastActivity(wallet.address)
+            ]);
   
             return {
               ...wallet,
-              balance: balance ? Number(parseFloat(balance).toFixed(2)) : 0,
-              lastActivity: lastTransaction || wallet.lastActivity,
+              balance: balanceData?.balance ? Number(parseFloat(balanceData.balance).toFixed(2)) : 0,
+              lastActivity: lastActivity || wallet.lastActivity,
             };
           })
         );

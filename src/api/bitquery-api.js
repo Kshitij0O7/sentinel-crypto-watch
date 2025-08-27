@@ -170,72 +170,7 @@ export const getWalletLastActivity = async (address) => {
   }
 };
 
-// Keep the original getStats function for backward compatibility
-export const getStats = async (address) => {
-  const cacheKey = `stats_${address}`;
-  const cached = apiCache.get(cacheKey);
-  if (cached) return cached;
 
-  let query = `
-    query MyQuery {
-        EVM(dataset: combined) {
-            tokens: BalanceUpdates(
-            where: {BalanceUpdate: {Address: {is: "${address}"}}}
-            ) {
-            uniq(of: Currency_SmartContract)
-            }
-            balance: BalanceUpdates(
-            where: {BalanceUpdate: {Address: {is: "${address}"}}, Currency: {SmartContract: {is: "0x"}}}
-            ) {
-            sum(of: BalanceUpdate_Amount, selectWhere: {gt: "0"})
-            usd:sum(of: BalanceUpdate_AmountInUSD, selectWhere: {gt: "0"})
-            }
-            transactions: Transactions(
-            where: {TransactionStatus: {Success: true}, Transaction: {From: {is: "${address}"}}}
-            ){
-            count
-            }
-            lastTransaction: Transactions(
-            where: {TransactionStatus: {Success: true}, Transaction: {From: {is: "${address}"}}}
-            ){
-            Block{
-                Date(maximum: Block_Date)
-            }
-            }
-        }
-    }
-    `;
-  config.data.query = query;
-
-  try {
-    const response = await axios.request(config);
-
-    // Add null checks and provide default values for empty arrays
-    const balanceData = response.data.data.EVM.balance?.[0];
-    const tokensData = response.data.data.EVM.tokens?.[0];
-    const transactionsData = response.data.data.EVM.transactions?.[0];
-    const lastTransactionData = response.data.data.EVM.lastTransaction?.[0];
-
-    const balance = balanceData?.sum || "0";
-    const usd = balanceData?.usd || "0";
-    const token = tokensData?.uniq || "0";
-    const transactionRecord = transactionsData?.count || "0";
-    const lastTransaction = lastTransactionData?.Block?.Date || "";
-
-    const result = { balance, usd, token, transactionRecord, lastTransaction };
-    apiCache.set(cacheKey, result, 3 * 60 * 1000); // Cache for 3 minutes
-    return result;
-  } catch (error) {
-    console.error("Could not get stats for the wallet:", error);
-    return {
-      balance: "0",
-      usd: "0",
-      token: "0",
-      transactionRecord: "0",
-      lastTransaction: "",
-    };
-  }
-};
 
 export const getRecentTransactions = async (addresses) => {
   let query = `

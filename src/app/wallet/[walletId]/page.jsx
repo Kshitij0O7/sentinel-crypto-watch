@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import jsPDF from "jspdf";
-import {getStats, getTransactionHistory, getHoldings} from '@/api/bitquery-api';
+import {getWalletBalance, getWalletTokens, getWalletTransactionCount, getWalletLastActivity, getTransactionHistory, getHoldings} from '@/api/bitquery-api';
 import { symbol } from "zod";
 
 const WalletDetails = () => {
@@ -43,8 +43,11 @@ const WalletDetails = () => {
   useEffect(() => {
     const fetchAllData = async () => {
       try {
-        const [stats, txHistory, holdings] = await Promise.all([
-          getStats(walletId),
+        const [balanceData, tokenCount, txCount, lastActivity, txHistory, holdings] = await Promise.all([
+          getWalletBalance(walletId),
+          getWalletTokens(walletId),
+          getWalletTransactionCount(walletId),
+          getWalletLastActivity(walletId),
           getTransactionHistory(walletId),
           getHoldings(walletId),
         ]);
@@ -75,9 +78,9 @@ const WalletDetails = () => {
         // Update wallet details
         setWalletDetails({
           ...walletDetails,
-          balance: stats.balance ? parseFloat(stats.balance).toFixed(2) + ' ETH' : '0 ETH',
-          totalTransactions: stats.transactionRecord,
-          lastActivity: stats.lastTransaction,
+          balance: balanceData?.balance ? parseFloat(balanceData.balance).toFixed(2) + ' ETH' : '0 ETH',
+          totalTransactions: txCount || 0,
+          lastActivity: lastActivity || '',
           transactions: formattedTransactions,
           holdings: formattedHoldings,
         });

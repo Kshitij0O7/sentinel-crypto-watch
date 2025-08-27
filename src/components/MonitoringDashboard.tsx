@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertTriangle, Eye, Plus, Activity, DollarSign, Clock, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import {getTotalAssets, getStats, getRecentTransactions} from "@/api/bitquery-api";
+import {getTotalAssets, getWalletBalance, getWalletLastActivity, getRecentTransactions} from "@/api/bitquery-api";
 import { getWallets, getAssets, addWallet } from "@/api/wallets";
 import DashboardSkeleton from "./DashboardSkeleton";
 import { usePerformance } from "@/hooks/use-performance";
@@ -181,14 +181,17 @@ const MonitoringDashboard = () => {
     });
 
     // Fetch wallet stats in background (non-blocking)
-    getStats(newAddress).then(stats => {
-      if (stats) {
+    Promise.all([
+      getWalletBalance(newAddress),
+      getWalletLastActivity(newAddress)
+    ]).then(([balanceData, lastActivity]) => {
+      if (balanceData) {
         const updatedWallets = wallets.map(wallet => 
           wallet.address === newAddress 
             ? { 
                 ...wallet, 
-                balance: parseFloat(stats.balance).toFixed(2),
-                lastActivity: stats.lastActivity 
+                balance: parseFloat(balanceData.balance).toFixed(2),
+                lastActivity: lastActivity || ""
               }
             : wallet
         );
@@ -216,11 +219,14 @@ const MonitoringDashboard = () => {
         const walletStatsPromise = Promise.all(
           walletAddresses.map(async (wallet) => {
             try {
-              const stats = await getStats(wallet.address);
+              const [balanceData, lastActivity] = await Promise.all([
+                getWalletBalance(wallet.address),
+                getWalletLastActivity(wallet.address)
+              ]);
               return {
                 ...wallet,
-                balance: stats ? parseFloat(stats.balance).toFixed(2) : '0',
-                lastActivity: stats?.lastActivity,
+                balance: balanceData ? parseFloat(balanceData.balance).toFixed(2) : '0',
+                lastActivity: lastActivity || "",
               };
             } catch (error) {
               console.error(`Failed to fetch balance for ${wallet.address}`, error);

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Calendar, MapPin, Wallet, DollarSign, Activity, AlertTriangle, Eye, Users } from "lucide-react";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
-import {getTotalAssets, getStats, getRecentTransactions} from "@/api/bitquery-api";
+import {getTotalAssets, getWalletBalance, getWalletLastActivity, getRecentTransactions} from "@/api/bitquery-api";
 import { getCases, getCase } from "@/api/case-api";
 import { updateCase } from "../../../api/case-api";
 
@@ -54,15 +54,18 @@ const CaseDetail = () => {
         return
       };
   
-      // Update wallet info with stats
+              // Update wallet info with stats
       const updatedAddresses = await Promise.all(
         foundCase.addresses.map(async (wallet) => {
           try {
-            const stats = await getStats(wallet.address); // await if getStats is async
+            const [balanceData, lastActivity] = await Promise.all([
+              getWalletBalance(wallet.address),
+              getWalletLastActivity(wallet.address)
+            ]);
             return {
               ...wallet,
-              balance: stats ? parseFloat(stats?.balance).toFixed(2) : '0',
-              lastActivity: stats?.lastTransaction || '',
+              balance: balanceData ? parseFloat(balanceData.balance).toFixed(2) : '0',
+              lastActivity: lastActivity || '',
             };
           } catch (error) {
             console.error(`Failed to fetch balance for ${wallet.address}`, error);

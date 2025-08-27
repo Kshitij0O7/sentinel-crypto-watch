@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, DollarSign, Bitcoin, Shield, TrendingUp, TrendingDown, Calendar, MapPin, Eye } from "lucide-react";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
 import { getAssets, updateAssets } from "@/api/wallets";
-import {getStats} from "@/api/bitquery-api";
+import {getWalletBalance, getWalletTokens} from "@/api/bitquery-api";
 
 const AssetsUnderSeizure = () => {
   const navigate = useNavigate();
@@ -17,28 +17,28 @@ const AssetsUnderSeizure = () => {
 
   useEffect(() => {
     const fetchBalances = async () => {
-      const updatedAssets = await Promise.all(
-        seizedAssets.map(async (asset) => {
-          try {
-            const stats = await getStats(asset.address);
-            // console.log(stats);
-            return {
-              ...asset,
-              amount: stats ? parseFloat(stats.balance).toFixed(2) : '0',
-              usdValue: stats ? Number(parseFloat(stats.usd).toFixed(2)) : 0,
-            };
-          } catch (error) {
-            console.error(`Failed to fetch amount for ${asset.address}`, error);
-            return {
-              ...asset,
-              amount: '0',
-              usdValue: 0,
-            };
-          } finally {
-            setLoading(false);
-          }
-        })
-      );
+              const updatedAssets = await Promise.all(
+          seizedAssets.map(async (asset) => {
+            try {
+              const balanceData = await getWalletBalance(asset.address);
+              // console.log(balanceData);
+              return {
+                ...asset,
+                amount: balanceData?.balance ? parseFloat(balanceData.balance).toFixed(2) : '0',
+                usdValue: balanceData?.usd ? Number(parseFloat(balanceData.usd).toFixed(2)) : 0,
+              };
+            } catch (error) {
+              console.error(`Failed to fetch amount for ${asset.address}`, error);
+              return {
+                ...asset,
+                amount: '0',
+                usdValue: 0,
+              };
+            } finally {
+              setLoading(false);
+            }
+          })
+        );
   
       updateAssets(updatedAssets);
       setSeizedAssets(updatedAssets);
