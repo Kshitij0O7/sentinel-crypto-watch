@@ -212,64 +212,81 @@ const MonitoringDashboard = () => {
         let walletAddresses = getWallets();
         const walletAddressesList = walletAddresses.map(wallet => wallet.address);
   
-        // Fetch total balance
-        const totalBalancePromise = getTotalAssets(JSON.stringify(walletAddressesList));
+        // Fetch total balance independently
+        setMetricsLoaded(false);
+        try {
+          const totalBalanceResult = await getTotalAssets(JSON.stringify(walletAddressesList));
+          if (isMounted) {
+            setBalance(parseFloat(totalBalanceResult).toFixed(2));
+            setMetricsLoaded(true);
+          }
+        } catch (error) {
+          console.error('Error fetching total balance:', error);
+          if (isMounted) setMetricsLoaded(true);
+        }
   
-        // Fetch individual wallet stats
-        const walletStatsPromise = Promise.all(
-          walletAddresses.map(async (wallet) => {
-            try {
-              const [balanceData, lastActivity] = await Promise.all([
-                getWalletBalance(wallet.address),
-                getWalletLastActivity(wallet.address)
-              ]);
-              return {
-                ...wallet,
-                balance: balanceData ? parseFloat(balanceData.balance).toFixed(2) : '0',
-                lastActivity: lastActivity || "",
-              };
-            } catch (error) {
-              console.error(`Failed to fetch balance for ${wallet.address}`, error);
-              return {
-                ...wallet,
-                balance: '0',
-                lastActivity: "",
-              };
-            }
-          })
-        );
+        // Fetch individual wallet stats independently
+        setWalletsLoaded(false);
+        try {
+          const walletStatsResult = await Promise.all(
+            walletAddresses.map(async (wallet) => {
+              try {
+                const [balanceData, lastActivity] = await Promise.all([
+                  getWalletBalance(wallet.address),
+                  getWalletLastActivity(wallet.address)
+                ]);
+                return {
+                  ...wallet,
+                  balance: balanceData ? parseFloat(balanceData.balance).toFixed(2) : '0',
+                  lastActivity: lastActivity || "",
+                };
+              } catch (error) {
+                console.error(`Failed to fetch balance for ${wallet.address}`, error);
+                return {
+                  ...wallet,
+                  balance: '0',
+                  lastActivity: "",
+                };
+              }
+            })
+          );
+          
+          if (isMounted) {
+            setWalletAddresses(walletStatsResult);
+            setWalletsLoaded(true);
+          }
+        } catch (error) {
+          console.error('Error fetching wallet stats:', error);
+          if (isMounted) setWalletsLoaded(true);
+        }
   
-        // Fetch recent transactions (both incoming and outgoing)
-        const recentTransactionsPromise = getRecentTransactions(JSON.stringify(walletAddressesList));
-  
-        // Wait for all promises
-        const [totalBalanceResult, walletStatsResult, recentTransactionsResult] = await Promise.all([
-          totalBalancePromise,
-          walletStatsPromise,
-          recentTransactionsPromise,
-        ]);
-  
-        if (!isMounted) return;
-  
-        // Update state
-        setBalance(parseFloat(totalBalanceResult).toFixed(2));
-        setWalletAddresses(walletStatsResult);
-        // localStorage.setItem("wallets", JSON.stringify(walletStatsResult));
-  
-        const formattedTransactions: Transaction[] = recentTransactionsResult.map((tx: any, index: number) => ({
-          id: (index + 1).toString(),
-          hash: tx.Transaction.Hash,
-          from: tx.Transfer.Sender,
-          to: tx.Transfer.Receiver,
-          amount: parseFloat(tx.Transfer.Amount).toFixed(6),
-          currency: 'ETH',
-          timestamp: tx.Block.Time,
-          status: tx.Transfer.Success ? 'confirmed' : 'failed',
-        }));
-  
-        setRecentTransactions(formattedTransactions);
+        // Fetch recent transactions independently
+        setTransactionsLoaded(false);
+        try {
+          const recentTransactionsResult = await getRecentTransactions(JSON.stringify(walletAddressesList));
+          
+          if (isMounted) {
+            const formattedTransactions: Transaction[] = recentTransactionsResult.map((tx: any, index: number) => ({
+              id: (index + 1).toString(),
+              hash: tx.Transaction.Hash,
+              from: tx.Transfer.Sender,
+              to: tx.Transfer.Receiver,
+              amount: parseFloat(tx.Transfer.Amount).toFixed(6),
+              currency: 'ETH',
+              timestamp: tx.Block.Time,
+              status: tx.Transfer.Success ? 'confirmed' : 'failed',
+            }));
+            
+            setRecentTransactions(formattedTransactions);
+            setTransactionsLoaded(true);
+          }
+        } catch (error) {
+          console.error('Error fetching transactions:', error);
+          if (isMounted) setTransactionsLoaded(true);
+        }
+        
       } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+        console.error('Error in fetchAllData:', error);
       } finally {
         if (isMounted) setLoading(false); // stop loading
       }
@@ -317,7 +334,9 @@ const MonitoringDashboard = () => {
             <Eye className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{walletAddresses.length}</div>
+            <div className="text-2xl font-bold">
+              {!walletsLoaded ? "..." : walletAddresses.length}
+            </div>
             <p className="text-xs text-muted-foreground">
               Click to view all wallets
             </p>
@@ -343,7 +362,9 @@ const MonitoringDashboard = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{balance} ETH</div>
+            <div className="text-2xl font-bold">
+              {!metricsLoaded ? "..." : `${balance} ETH`}
+            </div>
             <p className="text-xs text-muted-foreground">
               Click to view all assets
             </p>
@@ -500,35 +521,46 @@ const MonitoringDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {recentTransactions.map((tx) => (
-              <div
-                key={tx.id}
-                className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg"
-              >
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{tx.currency}</Badge>
-                    <Badge variant={tx.status === 'confirmed' ? 'default' : 'secondary'}>
-                      {tx.status}
-                    </Badge>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="font-mono text-sm">Hash: {tx.hash}</p>
-                    <p className="text-sm">
-                      <span className="font-medium">Amount:</span> {tx.amount} {tx.currency}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {tx.timestamp}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 mt-4 md:mt-0">
-                  <Button variant="outline" size="sm">
-                    Investigate
-                  </Button>
-                </div>
+            {!transactionsLoaded ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                <p className="text-muted-foreground">Loading transactions...</p>
               </div>
-            ))}
+            ) : recentTransactions.length > 0 ? (
+              recentTransactions.map((tx) => (
+                <div
+                  key={tx.id}
+                  className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{tx.currency}</Badge>
+                      <Badge variant={tx.status === 'confirmed' ? 'default' : 'secondary'}>
+                        {tx.status}
+                      </Badge>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-mono text-sm">Hash: {tx.hash}</p>
+                      <p className="text-sm">
+                        <span className="font-medium">Amount:</span> {tx.amount} {tx.currency}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {tx.timestamp}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 mt-4 md:mt-0">
+                    <Button variant="outline" size="sm">
+                      Investigate
+                    </Button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                No transactions found
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

@@ -20,6 +20,9 @@ const CaseDetail = () => {
   const [selectedAlertGroupId, setSelectedAlertGroupId] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [addressesLoading, setAddressesLoading] = useState(false);
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
+  const [totalValueLoading, setTotalValueLoading] = useState(false);
 
   // Mock data for alert groups
   const alertGroups = [
@@ -48,70 +51,99 @@ const CaseDetail = () => {
   useEffect(() => {
     const getInfo = async () => {
       // Find the case by caseId
-      setLoading(true)
       if (!foundCase) {
-        setLoading(false);
-        return
-      };
-  
-              // Update wallet info with stats
-      const updatedAddresses = await Promise.all(
-        foundCase.addresses.map(async (wallet) => {
-          try {
-            const [balanceData, lastActivity] = await Promise.all([
-              getWalletBalance(wallet.address),
-              getWalletLastActivity(wallet.address)
-            ]);
-            return {
-              ...wallet,
-              balance: balanceData ? parseFloat(balanceData.balance).toFixed(2) : '0',
-              lastActivity: lastActivity || '',
-            };
-          } catch (error) {
-            console.error(`Failed to fetch balance for ${wallet.address}`, error);
-            return {
-              ...wallet,
-              balance: '0',
-              lastActivity: '',
-            };
-          }
-        })
-      );
-  
+        return;
+      }
+      
+      // Set initial case data immediately with empty arrays for progressive loading
+      setCaseData({
+        ...foundCase,
+        addresses: [],
+        recentTransactions: [],
+        totalValue: "0"
+      });
+      if (foundCase.alertGroupId) {
+        setSelectedAlertGroupId(foundCase.alertGroupId);
+      }
+
+      // Load wallet addresses progressively
+      setAddressesLoading(true);
       try {
-        const addresses = updatedAddresses.map(wallet => wallet.address);
+        const updatedAddresses = await Promise.all(
+          foundCase.addresses.map(async (wallet) => {
+            try {
+              const [balanceData, lastActivity] = await Promise.all([
+                getWalletBalance(wallet.address),
+                getWalletLastActivity(wallet.address)
+              ]);
+              return {
+                ...wallet,
+                balance: balanceData ? parseFloat(balanceData.balance).toFixed(2) : '0',
+                lastActivity: lastActivity || '',
+              };
+            } catch (error) {
+              console.error(`Failed to fetch balance for ${wallet.address}`, error);
+              return {
+                ...wallet,
+                balance: '0',
+                lastActivity: '',
+              };
+            }
+          })
+        );
+        
+        setCaseData(prev => ({
+          ...prev,
+          addresses: updatedAddresses
+        }));
+      } catch (error) {
+        console.error(`Failed to fetch wallet addresses:`, error);
+      } finally {
+        setAddressesLoading(false);
+      }
+
+      // Load total value independently
+      setTotalValueLoading(true);
+      try {
+        const addresses = foundCase.addresses.map(wallet => wallet.address);
         const updatedValue = await getTotalAssets(JSON.stringify(addresses));
-  
+        setCaseData(prev => ({
+          ...prev,
+          totalValue: parseFloat(updatedValue).toFixed(2)
+        }));
+      } catch (error) {
+        console.error(`Failed to fetch total value:`, error);
+      } finally {
+        setTotalValueLoading(false);
+      }
+
+      // Load transactions independently
+      setTransactionsLoading(true);
+      try {
+        const addresses = foundCase.addresses.map(wallet => wallet.address);
         const transactions = await getRecentTransactions(JSON.stringify(addresses));
         const formattedTransactions = transactions.map((tx, index) => ({
-          id: (index + 1).toString(), // or use tx.Transaction.Hash if you want a unique id
+          id: (index + 1).toString(),
           hash: tx.Transaction.Hash,
           from: tx.Transfer.Sender,
           to: tx.Transfer.Receiver,
-          amount: parseFloat(tx.Transfer.Amount).toFixed(6), // adjust decimals if needed
-          currency: 'ETH', // or determine dynamically if you have multiple currencies
+          amount: parseFloat(tx.Transfer.Amount).toFixed(6),
+          currency: 'ETH',
           timestamp: tx.Block.Time,
           status: tx.Transfer.Success ? 'confirmed' : 'failed',
         }));
-        const updatedCase = {
-          ...foundCase,
-          totalValue: parseFloat(updatedValue).toFixed(2),
-          addresses: updatedAddresses,
-          recentTransactions: formattedTransactions,
-        };
-    
-        updateCase(updatedCase);
-        setCaseData(updatedCase);
-        if (updatedCase.alertGroupId) {
-          setSelectedAlertGroupId(updatedCase.alertGroupId);
-        }
+        
+        setCaseData(prev => ({
+          ...prev,
+          recentTransactions: formattedTransactions
+        }));
       } catch (error) {
-        console.error(`Failed to fetch case info:`, error);
-      } finally{
-        setLoading(false);
-      };
+        console.error(`Failed to fetch transactions:`, error);
+      } finally {
+        setTransactionsLoading(false);
       }
-  
+    };
+
     getInfo();
   }, [caseId]);  
 
@@ -146,7 +178,7 @@ const CaseDetail = () => {
     return alertGroups.find(g => g.id === caseData.alertGroupId);
   };
 
-  if (loading) {
+  if (!caseData) {
     return <div className="w-full mx-auto text-center">Loading case data...</div>; // or a spinner
   }
 
@@ -291,11 +323,15 @@ const CaseDetail = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div className="bg-accent/30 p-3 rounded-lg">
-                      <div className="text-2xl font-bold">{caseData.addresses.length}</div>
+                      <div className="text-2xl font-bold">
+                        {addressesLoading ? "..." : caseData.addresses.length}
+                      </div>
                       <div className="text-xs text-muted-foreground">Addresses</div>
                     </div>
                     <div className="bg-accent/30 p-3 rounded-lg">
-                      <div className="text-2xl font-bold">{caseData.totalValue}</div>
+                      <div className="text-2xl font-bold">
+                        {totalValueLoading ? "..." : caseData.totalValue || "0"}
+                      </div>
                       <div className="text-xs text-muted-foreground">{caseData.currency}</div>
                     </div>
                     <div className="bg-accent/30 p-3 rounded-lg">
@@ -321,39 +357,50 @@ const CaseDetail = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {caseData.addresses.map((address) => (
-                  <div key={address.id} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">{address.blockchain}</Badge>
-                          {address.privateLabel && (
-                            <Badge variant="secondary">{address.privateLabel}</Badge>
-                          )}
-                          <span className="text-lg font-semibold text-primary">
-                            {address.balance} {address.blockchain === 'Ethereum' ? 'ETH' : 'BTC'}
-                          </span>
-                        </div>
-                        <code className="text-sm bg-accent/50 px-2 py-1 rounded break-all">
-                          {address.address}
-                        </code>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>Seized: {address.dateSeized}</span>
-                          <span>Last Activity: {address.lastActivity}</span>
-                        </div>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate(`/wallet/${address.address}`)}
-                        className="flex items-center gap-2"
-                      >
-                        <Eye className="h-4 w-4" />
-                        View Details
-                      </Button>
-                    </div>
+                {addressesLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                    <p className="text-muted-foreground">Loading wallet data...</p>
                   </div>
-                ))}
+                ) : caseData.addresses.length > 0 ? (
+                  caseData.addresses.map((address) => (
+                    <div key={address.id} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline">{address.blockchain}</Badge>
+                            {address.privateLabel && (
+                              <Badge variant="secondary">{address.privateLabel}</Badge>
+                            )}
+                            <span className="text-lg font-semibold text-primary">
+                              {address.balance} {address.blockchain === 'Ethereum' ? 'ETH' : 'BTC'}
+                            </span>
+                          </div>
+                          <code className="text-sm bg-accent/50 px-2 py-1 rounded break-all">
+                            {address.address}
+                          </code>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <span>Seized: {address.dateSeized}</span>
+                            <span>Last Activity: {address.lastActivity}</span>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/wallet/${address.address}`)}
+                          className="flex items-center gap-2"
+                        >
+                          <Eye className="h-4 w-4" />
+                          View Details
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No addresses found
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -372,22 +419,33 @@ const CaseDetail = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {caseData.recentTransactions.map((tx) => (
-                    <div key={tx.id} className="border rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge variant="outline">{tx.status}</Badge>
-                        <span className="text-sm font-medium">
-                          {tx.amount} {tx.currency}
-                        </span>
-                      </div>
-                      <div className="space-y-1 text-xs text-muted-foreground">
-                        <div>From: <code className="bg-accent/50 px-1 rounded">{tx.from.slice(0, 10)}...</code></div>
-                        <div>To: <code className="bg-accent/50 px-1 rounded">{tx.to.slice(0, 10)}...</code></div>
-                        <div>Hash: <code className="bg-accent/50 px-1 rounded">{tx.hash}</code></div>
-                        <div>{tx.timestamp}</div>
-                      </div>
+                  {transactionsLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                      <p className="text-muted-foreground">Loading transactions...</p>
                     </div>
-                  ))}
+                  ) : caseData.recentTransactions && caseData.recentTransactions.length > 0 ? (
+                    caseData.recentTransactions.map((tx) => (
+                      <div key={tx.id} className="border rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge variant="outline">{tx.status}</Badge>
+                          <span className="text-sm font-medium">
+                            {tx.amount} {tx.currency}
+                          </span>
+                        </div>
+                        <div className="space-y-1 text-xs text-muted-foreground">
+                          <div>From: <code className="bg-accent/50 px-1 rounded">{tx.from.slice(0, 10)}...</code></div>
+                          <div>To: <code className="bg-accent/50 px-1 rounded">{tx.to.slice(0, 10)}...</code></div>
+                          <div>Hash: <code className="bg-accent/50 px-1 rounded">{tx.hash}</code></div>
+                          <div>{tx.timestamp}</div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No transactions found
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
