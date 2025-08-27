@@ -39,7 +39,7 @@ export const getTotalAssets = async (addresses) => {
 
     try {
         const response = await axios.request(config);
-        const result = response.data.data.EVM.BalanceUpdates[0].balance;
+        const result = response.data.data.EVM.BalanceUpdates?.[0]?.balance || "0";
         apiCache.set(cacheKey, result, 2 * 60 * 1000); // Cache for 2 minutes
         return result;
     } catch (error) {
@@ -210,12 +210,17 @@ export const getStats = async (address) => {
   try {
     const response = await axios.request(config);
 
-    const balance = response.data.data.EVM.balance[0].sum;
-    const usd = response.data.data.EVM.balance[0].usd;
-    const token = response.data.data.EVM.tokens[0].uniq;
-    const transactionRecord = response.data.data.EVM.transactions[0].count;
-    const lastTransaction =
-      response.data.data.EVM.lastTransaction[0].Block.Date;
+    // Add null checks and provide default values for empty arrays
+    const balanceData = response.data.data.EVM.balance?.[0];
+    const tokensData = response.data.data.EVM.tokens?.[0];
+    const transactionsData = response.data.data.EVM.transactions?.[0];
+    const lastTransactionData = response.data.data.EVM.lastTransaction?.[0];
+
+    const balance = balanceData?.sum || "0";
+    const usd = balanceData?.usd || "0";
+    const token = tokensData?.uniq || "0";
+    const transactionRecord = transactionsData?.count || "0";
+    const lastTransaction = lastTransactionData?.Block?.Date || "";
 
     const result = { balance, usd, token, transactionRecord, lastTransaction };
     apiCache.set(cacheKey, result, 3 * 60 * 1000); // Cache for 3 minutes
