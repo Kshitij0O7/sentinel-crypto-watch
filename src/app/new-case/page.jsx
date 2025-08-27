@@ -51,7 +51,8 @@ const NewCase = () => {
 
   const handleCreateCase = () => {
     if (!newCase.name || !newCase.caseId) {
-
+      // Show error notification
+      window.showNotification.error('Please fill in all required fields');
       return;
     }
 
@@ -97,7 +98,8 @@ const NewCase = () => {
     addCase(caseData);
     setNewCase({ name: "", caseId: "", description: "", address: "", blockchain: "Ethereum", alertGroupId: "" });
     
-
+    // Show success notification
+    window.showNotification.success(`Case ${newCase.caseId} has been created successfully${newCase.address ? ' with address' : ''}`);
 
     // Navigate to manage cases page after creation
     navigate("/cases");
@@ -105,7 +107,8 @@ const NewCase = () => {
 
   const handleCreateAlertGroup = () => {
     if (!newAlertGroup.name || !newAlertGroup.email) {
-
+      // Show error notification
+      window.showNotification.error('Please fill in group name and at least one email');
       return;
     }
 
@@ -119,7 +122,8 @@ const NewCase = () => {
     setAlertGroups([...alertGroups, alertGroupData]);
     setNewAlertGroup({ name: "", email: "" });
     
-
+    // Show success notification
+    window.showNotification.success(`Alert group "${newAlertGroup.name}" has been created successfully`);
   };
 
   return (

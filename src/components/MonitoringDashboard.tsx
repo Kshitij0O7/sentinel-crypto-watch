@@ -102,10 +102,15 @@ const MonitoringDashboard = () => {
 
       setRecentTransactions(formattedTransactions);
       
-
+      // Show success notification
+      window.showNotification.success(`Found ${formattedTransactions.length} recent transactions`);
+      
     } catch (error) {
       console.error('Error refreshing transactions:', error);
-
+      
+      // Show error notification
+      window.showNotification.error('Could not fetch latest transactions');
+      
     } finally {
       setRefreshingTransactions(false);
     }
@@ -113,7 +118,8 @@ const MonitoringDashboard = () => {
 
   const handleAddWallet = async () => {
     if (!newAddress || !selectedCase) {
-
+      // Show error notification
+      window.showNotification.error('Please fill in all required fields');
       return;
     }
   
@@ -161,8 +167,6 @@ const MonitoringDashboard = () => {
     seizedAssets.push(newAsset);
     addWallet(wallets, seizedAssets);
 
-
-
     // Fetch wallet stats in background (non-blocking)
     Promise.all([
       getWalletBalance(newAddress),
@@ -181,8 +185,14 @@ const MonitoringDashboard = () => {
         setWalletAddresses(updatedWallets);
         addWallet(updatedWallets, seizedAssets);
       }
+      
+      // Show success notification after loading ends
+      window.showNotification.success(`Wallet ${newWallet.address} has been added successfully.`);
     }).catch(error => {
       console.error("Failed to fetch wallet stats in background:", error);
+      
+      // Show error notification if something goes wrong
+      window.showNotification.error('Wallet added but failed to fetch balance data');
     }).finally(() => {
       setAddingWallet(false);
     });

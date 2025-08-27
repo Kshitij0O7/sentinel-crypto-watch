@@ -90,32 +90,36 @@ const ManageCases = () => {
 
   const handleAddEmailToGroup = (groupId, email) => {
     if (!email || !email.includes('@')) {
-
+      // Show error notification
+      window.showNotification.error('Please enter a valid email address');
       return;
     }
 
-    setAlertGroups(alertGroups.map(group => 
+        setAlertGroups(alertGroups.map(group => 
       group.id === groupId && !group.emails.includes(email)
         ? { ...group, emails: [...group.emails, email] }
         : group
     ));
 
-
+    // Show success notification
+    window.showNotification.success(`Email added to ${alertGroups.find(g => g.id === groupId)?.name}`);
   };
 
   const handleRemoveEmailFromGroup = (groupId, emailToRemove) => {
-    setAlertGroups(alertGroups.map(group => 
+        setAlertGroups(alertGroups.map(group => 
       group.id === groupId
         ? { ...group, emails: group.emails.filter(email => email !== emailToRemove) }
         : group
     ));
 
-
+    // Show success notification
+    window.showNotification.success('Email removed from alert group');
   };
 
   const handleAddAddress = () => {
     if (!newAddress.address || !selectedCaseId) {
-
+      // Show error notification
+      window.showNotification.error('Please fill in all required fields');
       return;
     }
     // console.log(cases.selectedCaseId);
@@ -145,19 +149,21 @@ const ManageCases = () => {
         : case_
     ));
 
-    setNewAddress({ address: "", blockchain: "Ethereum", privateLabel: "", dateSeized: "" });
+        setNewAddress({ address: "", blockchain: "Ethereum", privateLabel: "", dateSeized: "" });
     setSelectedCaseId("");
     setShowAddressForm(false);
     
-
+    // Show success notification
+    window.showNotification.success('Address added to case successfully');
   };
 
   const handleDeleteCase = (caseId) => {
     const caseToDelete = cases.find(c => c.id === caseId);
-    deleteCase(caseId);
+        deleteCase(caseId);
     setCases(cases.filter(c => c.id !== caseId));
     
-
+    // Show success notification
+    window.showNotification.success(`Case "${caseToDelete?.name}" has been deleted successfully`);
   };
 
   const handleDeleteAddress = (caseId, addressId) => {
@@ -187,7 +193,8 @@ const ManageCases = () => {
         : case_
     ));
     
-
+    // Show success notification
+    window.showNotification.success(`Alert group "${groupToDelete?.name}" has been deleted successfully`);
   };
 
   const getAlertsForGroup = (groupId) => {
