@@ -5,11 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertTriangle, Eye, Plus, Activity, DollarSign, Clock } from "lucide-react";
+import { AlertTriangle, Eye, Plus, Activity, DollarSign, Clock, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-// import walletsData from "../../wallets.json";
 import {getTotalAssets, getStats, getRecentTransactions} from "@/api/bitquery-api";
 import { getWallets, getAssets, addWallet } from "@/api/wallets";
+import DashboardSkeleton from "./DashboardSkeleton";
+import { usePerformance } from "@/hooks/use-performance";
 
 interface WalletAddress {
   id: string;
@@ -35,6 +36,9 @@ interface Transaction {
 }
 
 const MonitoringDashboard = () => {
+  // Performance monitoring
+  usePerformance("MonitoringDashboard");
+  
   const [balance, setBalance] = useState<any>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -42,6 +46,11 @@ const MonitoringDashboard = () => {
   const [selectedCase, setSelectedCase] = useState("");
   const [selectedBlockchain, setSelectedBlockchain] = useState("ethereum");
   const [loading, setLoading] = useState(true);
+  const [metricsLoaded, setMetricsLoaded] = useState(false);
+  const [walletsLoaded, setWalletsLoaded] = useState(false);
+  const [transactionsLoaded, setTransactionsLoaded] = useState(false);
+  const [addingWallet, setAddingWallet] = useState(false);
+  const [refreshingTransactions, setRefreshingTransactions] = useState(false);
 
   
   // Mock existing cases data -> To be replaced by API call to get all cases
@@ -65,6 +74,51 @@ const MonitoringDashboard = () => {
     setSelectedCase(value);
   };
 
+  const refreshTransactions = async () => {
+    if (refreshingTransactions) return;
+    
+    setRefreshingTransactions(true);
+    
+    try {
+      const walletAddressesList = walletAddresses.map(wallet => wallet.address);
+      
+      if (walletAddressesList.length === 0) {
+        setRefreshingTransactions(false);
+        return;
+      }
+
+      const recentTransactionsResult = await getRecentTransactions(JSON.stringify(walletAddressesList));
+      
+      const formattedTransactions: Transaction[] = recentTransactionsResult.map((tx: any, index: number) => ({
+        id: (index + 1).toString(),
+        hash: tx.Transaction.Hash,
+        from: tx.Transfer.Sender,
+        to: tx.Transfer.Receiver,
+        amount: parseFloat(tx.Transfer.Amount).toFixed(6),
+        currency: 'ETH',
+        timestamp: tx.Block.Time,
+        status: tx.Transfer.Success ? 'confirmed' : 'failed',
+      }));
+
+      setRecentTransactions(formattedTransactions);
+      
+      toast({
+        title: "Transactions Refreshed",
+        description: `Found ${formattedTransactions.length} recent transactions`,
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Error refreshing transactions:', error);
+      toast({
+        title: "Refresh Failed",
+        description: "Could not fetch latest transactions",
+        variant: "destructive",
+      });
+    } finally {
+      setRefreshingTransactions(false);
+    }
+  };
+
   const handleAddWallet = async () => {
     if (!newAddress || !selectedCase) {
       toast({
@@ -75,23 +129,34 @@ const MonitoringDashboard = () => {
       return;
     }
   
-    // Create new wallet object
+    // Prevent duplicate submissions
+    if (addingWallet) return;
+    
+    setAddingWallet(true);
+  
+    // Create new wallet object INSTANTLY (no API call blocking)
     const wallets = [...walletAddresses];
-    const stats = await getStats(newAddress);
     const newWallet: WalletAddress = {
       id: (wallets.length + 1).toString(),
       address: newAddress,
       blockchain: "Ethereum",
       caseId: selectedCase,
-      balance: stats ? parseFloat(stats.balance).toFixed(2) : '0',
-      lastActivity: stats?.lastActivity,
+      balance: "0", // Will be updated in background
+      lastActivity: "",
       dateAdded: new Date().toISOString().split("T")[0],
       status: "active",
       dateSeized: "2024-01-15",
     };
   
-    wallets.push(newWallet);
+    // Clear form immediately for better UX
+    setNewAddress("");
+    setSelectedCase("");
 
+    // Add wallet immediately to UI
+    wallets.push(newWallet);
+    setWalletAddresses(wallets);
+
+    // Update localStorage immediately
     const seizedAssets = getAssets();
     const newAsset = {
       id: (seizedAssets.length + 1).toString(),
@@ -106,18 +171,34 @@ const MonitoringDashboard = () => {
     };
 
     seizedAssets.push(newAsset);
-  
-    // localStorage.setItem("wallets", JSON.stringify(wallets));
     addWallet(wallets, seizedAssets);
-    setWalletAddresses(wallets);
 
-    setNewAddress("");
-    setSelectedCase("");
-
+    // Show success toast immediately
     toast({
       title: "Address added!",
       description: `Wallet ${newWallet.address} has been added successfully.`,
       variant: "success",
+    });
+
+    // Fetch wallet stats in background (non-blocking)
+    getStats(newAddress).then(stats => {
+      if (stats) {
+        const updatedWallets = wallets.map(wallet => 
+          wallet.address === newAddress 
+            ? { 
+                ...wallet, 
+                balance: parseFloat(stats.balance).toFixed(2),
+                lastActivity: stats.lastActivity 
+              }
+            : wallet
+        );
+        setWalletAddresses(updatedWallets);
+        addWallet(updatedWallets, seizedAssets);
+      }
+    }).catch(error => {
+      console.error("Failed to fetch wallet stats in background:", error);
+    }).finally(() => {
+      setAddingWallet(false);
     });
   };
   
@@ -152,7 +233,7 @@ const MonitoringDashboard = () => {
           })
         );
   
-        // Fetch recent transactions
+        // Fetch recent transactions (both incoming and outgoing)
         const recentTransactionsPromise = getRecentTransactions(JSON.stringify(walletAddressesList));
   
         // Wait for all promises
@@ -207,7 +288,7 @@ const MonitoringDashboard = () => {
 
   return (
     <>
-    {loading ? (<div className="w-full mx-auto text-center">Loading data...</div>) :(
+    {loading ? <DashboardSkeleton /> : (
       <div className="space-y-6">
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -315,8 +396,19 @@ const MonitoringDashboard = () => {
               </select>
             </div>
           </div>
-          <Button onClick={handleAddWallet} className="w-full md:w-auto">
-            Add to Monitoring System
+          <Button 
+            onClick={handleAddWallet} 
+            disabled={addingWallet}
+            className="w-full md:w-auto"
+          >
+            {addingWallet ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Adding...
+              </>
+            ) : (
+              "Add to Monitoring System"
+            )}
           </Button>
         </CardContent>
       </Card>
@@ -348,7 +440,7 @@ const MonitoringDashboard = () => {
                     <span>Case: {wallet.caseId}</span>
                     <span>Seized: {wallet.dateSeized}</span>
                     <span>Added to System: {wallet.dateAdded}</span>
-                    <span>Balance: {wallet.balance ?? 'Loading...'}</span>
+                    <span>Balance: {wallet.balance === '0' && wallet.lastActivity === '' ? 'Updating...' : wallet.balance ?? 'Loading...'}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 mt-4 md:mt-0">
@@ -369,13 +461,36 @@ const MonitoringDashboard = () => {
       {/* Recent Transactions */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Recent Transaction Activity
-          </CardTitle>
-          <CardDescription>
-            Latest detected transactions from monitored addresses
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Recent Transaction Activity
+              </CardTitle>
+              <CardDescription>
+                Latest detected transactions from monitored addresses
+              </CardDescription>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => refreshTransactions()}
+              disabled={refreshingTransactions}
+              className="flex items-center gap-2"
+            >
+              {refreshingTransactions ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                  Refreshing...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4" />
+                  Refresh
+                </>
+              )}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

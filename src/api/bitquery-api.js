@@ -1,24 +1,29 @@
 import axios from "axios";
-// import 'dotenv/config'
-// console.log(process.env)
+import apiCache from "./cache.js";
+
 const apiKey = import.meta.env.VITE_API_KEY;
 let data = {
-   "query": "",
-   "variables": "{}"
+  query: "",
+  variables: "{}",
 };
 
 let config = {
-   method: 'post',
-   maxBodyLength: Infinity,
-   url: 'https://streaming.bitquery.io/graphql',
-   headers: { 
-      'Content-Type': 'application/json', 
-      'Authorization': `Bearer ${apiKey}`
-   },
-   data : data
+  method: "post",
+  maxBodyLength: Infinity,
+  url: "https://streaming.bitquery.io/graphql",
+  headers: {
+    "Content-Type": "application/json",
+    'Authorization': `Bearer ${apiKey}`
+    // Authorization: `Bearer ory_at_`,
+  },
+  data: data,
 };
 
 export const getTotalAssets = async (addresses) => {
+    const cacheKey = `totalAssets_${addresses}`;
+    const cached = apiCache.get(cacheKey);
+    if (cached) return cached;
+
     let query = `
     {
         EVM(dataset: combined, network: eth) {
@@ -31,17 +36,24 @@ export const getTotalAssets = async (addresses) => {
     }
     `;
     config.data.query = query;
-    // console.log(config);
-    // console.log(apiKey);
 
-    const response = await axios.request(config);
-    const result = response.data.data.EVM.BalanceUpdates[0].balance;
-    // console.log(result);
-    return result;
-}
+    try {
+        const response = await axios.request(config);
+        const result = response.data.data.EVM.BalanceUpdates[0].balance;
+        apiCache.set(cacheKey, result, 2 * 60 * 1000); // Cache for 2 minutes
+        return result;
+    } catch (error) {
+        console.error("Error fetching total assets:", error);
+        return "0";
+    }
+};
 
 export const getStats = async (address) => {
-    let query = `
+  const cacheKey = `stats_${address}`;
+  const cached = apiCache.get(cacheKey);
+  if (cached) return cached;
+
+  let query = `
     query MyQuery {
         EVM(dataset: combined) {
             tokens: BalanceUpdates(
@@ -70,28 +82,35 @@ export const getStats = async (address) => {
         }
     }
     `;
-    config.data.query = query;
+  config.data.query = query;
 
-    try {
-        const response = await axios.request(config);
+  try {
+    const response = await axios.request(config);
 
-        // console.log(response.data);
-    
-        const balance = response.data.data.EVM.balance[0].sum;
-        const usd = response.data.data.EVM.balance[0].usd;
-        const token = response.data.data.EVM.tokens[0].uniq;
-        const transactionRecord = response.data.data.EVM.transactions[0].count;
-        const lastTransaction = response.data.data.EVM.lastTransaction[0].Block.Date;
-    
-        return {balance, usd, token, transactionRecord, lastTransaction};
-    } catch (error) {
-        console.error("Could not get stats for the wallet:", error);
-        return {balance: "0", usd: "0", token: "0", transactionRecord: "0", lastTransaction: ""};
-    }
-}
+    const balance = response.data.data.EVM.balance[0].sum;
+    const usd = response.data.data.EVM.balance[0].usd;
+    const token = response.data.data.EVM.tokens[0].uniq;
+    const transactionRecord = response.data.data.EVM.transactions[0].count;
+    const lastTransaction =
+      response.data.data.EVM.lastTransaction[0].Block.Date;
+
+    const result = { balance, usd, token, transactionRecord, lastTransaction };
+    apiCache.set(cacheKey, result, 3 * 60 * 1000); // Cache for 3 minutes
+    return result;
+  } catch (error) {
+    console.error("Could not get stats for the wallet:", error);
+    return {
+      balance: "0",
+      usd: "0",
+      token: "0",
+      transactionRecord: "0",
+      lastTransaction: "",
+    };
+  }
+};
 
 export const getRecentTransactions = async (addresses) => {
-    let query = `
+  let query = `
     query MyQuery {
         EVM {
             Transfers(
@@ -117,16 +136,16 @@ export const getRecentTransactions = async (addresses) => {
         }
     }
     `;
-    config.data.query = query;
+  config.data.query = query;
 
-    const response = await axios.request(config);
-    const result = response.data.data.EVM.Transfers;
+  const response = await axios.request(config);
+  const result = response.data.data.EVM.Transfers;
 
-    return result;
-}
+  return result;
+};
 
 export const getTransactionHistory = async (address) => {
-    let query = `
+  let query = `
     query MyQuery {
         EVM(dataset: combined) {
             Transfers(
@@ -152,16 +171,16 @@ export const getTransactionHistory = async (address) => {
         }
     }
     `;
-    config.data.query = query;
+  config.data.query = query;
 
-    const response = await axios.request(config);
-    const result = response.data.data.EVM.Transfers;
+  const response = await axios.request(config);
+  const result = response.data.data.EVM.Transfers;
 
-    return result;
-}
+  return result;
+};
 
 export const getHoldings = async (address) => {
-    let query = `
+  let query = `
     query MyQuery {
         EVM(dataset: combined) {
             BalanceUpdates(
@@ -179,10 +198,153 @@ export const getHoldings = async (address) => {
         }
     }
     `;
-    config.data.query = query;
+  config.data.query = query;
 
-    let response = await axios.request(config);
-    let result = response.data.data.EVM.BalanceUpdates;
+  let response = await axios.request(config);
+  let result = response.data.data.EVM.BalanceUpdates;
 
-    return result;
+  return result;
+};
+
+export const getAllWalletTransactions = async (address) => {
+  const cacheKey = `allTransactions_${address}`;
+  const cached = apiCache.get(cacheKey);
+  if (cached) return cached;
+
+  let query = `
+    query MyQuery {
+        EVM(dataset: combined, network: eth) {
+            # Native ETH transfers
+            nativeTransfers: Transfers(
+                where: {
+                    or: [
+                        {Transfer: {Sender: {is: "${address}"}}},
+                        {Transfer: {Receiver: {is: "${address}"}}}
+                    ]
+                    Transfer: {Currency: {SmartContract: {is: "0x"}}}
+                }
+                orderBy: {descending: Block_Time}
+                limit: {count:50}
+            ) {
+                Block {
+                    Time
+                    Number
+                }
+                Transfer {
+                    Amount
+                    Sender
+                    Receiver
+                    Success
+                    Currency {
+                        Symbol
+                        SmartContract
+                        Decimals
+                    }
+                }
+                Transaction {
+                    Hash
+                    GasPrice
+                }
+            }
+            
+            # ERC-20 token transfers
+            tokenTransfers: Transfers(
+                where: {
+                    or: [
+                        {Transfer: {Sender: {is: "${address}"}}},
+                        {Transfer: {Receiver: {is: "${address}"}}}
+                    ]
+                    Transfer: {Currency: {SmartContract: {not: "0x"}}}
+                }
+                orderBy: {descending: Block_Time}
+                limit: {count:50}
+            ) {
+                Block {
+                    Time
+                    Number
+                }
+                Transfer {
+                    Amount
+                    Sender
+                    Receiver
+                    Success
+                    Currency {
+                        Symbol
+                        SmartContract
+                        Decimals
+                    }
+                }
+                Transaction {
+                    Hash
+                    GasPrice
+                }
+            }
+            
+            # Contract interactions
+            contractInteractions: Transactions(
+                where: {
+                    or: [
+                        {Transaction: {From: {is: "${address}"}}},
+                        {Transaction: {To: {is: "${address}"}}}
+                    ]
+                    Transaction: {To: {not: "0x"}}
+                }
+                orderBy: {descending: Block_Time}
+                limit: {count:30}
+            ) {
+                Block {
+                    Time
+                    Number
+                }
+                Transaction {
+                    Hash
+                    From
+                    To
+                    GasPrice
+                    GasUsed
+                    Status
+                }
+            }
+        }
+    }
+    `;
+  
+  config.data.query = query;
+
+  try {
+    const response = await axios.request(config);
+    const data = response.data.data.EVM;
+    
+    // Combine and format all transaction types
+    const allTransactions = [
+      ...(data.nativeTransfers || []).map(tx => ({
+        ...tx,
+        type: 'native_transfer',
+        currency: 'ETH'
+      })),
+      ...(data.tokenTransfers || []).map(tx => ({
+        ...tx,
+        type: 'token_transfer',
+        currency: tx.Transfer.Currency.Symbol || 'Unknown Token'
+      })),
+      ...(data.contractInteractions || []).map(tx => ({
+        ...tx,
+        type: 'contract_interaction',
+        currency: 'Contract Call'
+      }))
+    ];
+    
+    // Sort by timestamp (newest first)
+    const sortedTransactions = allTransactions.sort((a, b) => 
+      new Date(b.Block.Time) - new Date(a.Block.Time)
+    );
+    
+    // Cache for 2 minutes
+    apiCache.set(cacheKey, sortedTransactions, 2 * 60 * 1000);
+    
+    return sortedTransactions;
+  } catch (error) {
+    console.error("Error fetching all wallet transactions:", error);
+    return [];
+  }
 };
