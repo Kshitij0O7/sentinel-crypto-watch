@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Activity, DollarSign, Clock, AlertTriangle, Copy, ChevronDown, Coins } from "lucide-react";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
-import { useToast } from "@/hooks/use-toast";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +21,7 @@ import { symbol } from "zod";
 const WalletDetails = () => {
   const { walletId } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
+
 
   const [walletDetails, setWalletDetails] = useState({
     address: walletId,

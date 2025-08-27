@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertTriangle, Eye, Plus, Activity, DollarSign, Clock, RefreshCw } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+
 import {getTotalAssets, getWalletBalance, getWalletLastActivity, getRecentTransactions} from "@/api/bitquery-api";
 import { getWallets, getAssets, addWallet } from "@/api/wallets";
 import DashboardSkeleton from "./DashboardSkeleton";
@@ -40,7 +40,7 @@ const MonitoringDashboard = () => {
   usePerformance("MonitoringDashboard");
   
   const [balance, setBalance] = useState<any>(null);
-  const { toast } = useToast();
+
   const navigate = useNavigate();
   const [newAddress, setNewAddress] = useState("");
   const [selectedCase, setSelectedCase] = useState("");
@@ -102,18 +102,10 @@ const MonitoringDashboard = () => {
 
       setRecentTransactions(formattedTransactions);
       
-      toast({
-        title: "Transactions Refreshed",
-        description: `Found ${formattedTransactions.length} recent transactions`,
-        variant: "default",
-      });
+
     } catch (error) {
       console.error('Error refreshing transactions:', error);
-      toast({
-        title: "Refresh Failed",
-        description: "Could not fetch latest transactions",
-        variant: "destructive",
-      });
+
     } finally {
       setRefreshingTransactions(false);
     }
@@ -121,11 +113,7 @@ const MonitoringDashboard = () => {
 
   const handleAddWallet = async () => {
     if (!newAddress || !selectedCase) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
+
       return;
     }
   
@@ -173,12 +161,7 @@ const MonitoringDashboard = () => {
     seizedAssets.push(newAsset);
     addWallet(wallets, seizedAssets);
 
-    // Show success toast immediately
-    toast({
-      title: "Address added!",
-      description: `Wallet ${newWallet.address} has been added successfully.`,
-      variant: "success",
-    });
+
 
     // Fetch wallet stats in background (non-blocking)
     Promise.all([

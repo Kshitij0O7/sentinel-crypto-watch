@@ -7,13 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Plus, Mail, ArrowLeft, Calendar, AlertTriangle, X, Trash2, Eye } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
 import { getCases } from "@/api/case-api";
 import { updateCase, deleteCase } from "@/api/case-api";
 
 const ManageCases = () => {
-  const { toast } = useToast();
+
   const navigate = useNavigate();
   
   // Form states for new address
@@ -90,11 +90,7 @@ const ManageCases = () => {
 
   const handleAddEmailToGroup = (groupId, email) => {
     if (!email || !email.includes('@')) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid email address",
-        variant: "destructive",
-      });
+
       return;
     }
 
@@ -104,10 +100,7 @@ const ManageCases = () => {
         : group
     ));
 
-    toast({
-      title: "Email Added",
-      description: `Email added to ${alertGroups.find(g => g.id === groupId)?.name}`,
-    });
+
   };
 
   const handleRemoveEmailFromGroup = (groupId, emailToRemove) => {
@@ -117,19 +110,12 @@ const ManageCases = () => {
         : group
     ));
 
-    toast({
-      title: "Email Removed",
-      description: "Email removed from alert group",
-    });
+
   };
 
   const handleAddAddress = () => {
     if (!newAddress.address || !selectedCaseId) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
+
       return;
     }
     // console.log(cases.selectedCaseId);
@@ -163,10 +149,7 @@ const ManageCases = () => {
     setSelectedCaseId("");
     setShowAddressForm(false);
     
-    toast({
-      title: "Address Added",
-      description: `Address added to case successfully`,
-    });
+
   };
 
   const handleDeleteCase = (caseId) => {
@@ -174,10 +157,7 @@ const ManageCases = () => {
     deleteCase(caseId);
     setCases(cases.filter(c => c.id !== caseId));
     
-    toast({
-      title: "Case Deleted",
-      description: `Case "${caseToDelete?.name}" has been deleted successfully`,
-    });
+
   };
 
   const handleDeleteAddress = (caseId, addressId) => {
@@ -207,10 +187,7 @@ const ManageCases = () => {
         : case_
     ));
     
-    toast({
-      title: "Alert Group Deleted",
-      description: `Alert group "${groupToDelete?.name}" has been deleted successfully`,
-    });
+
   };
 
   const getAlertsForGroup = (groupId) => {

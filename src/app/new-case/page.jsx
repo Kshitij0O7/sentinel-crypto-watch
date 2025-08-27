@@ -6,12 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Bell, ArrowLeft } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
 import { getCases, addCase } from "@/api/case-api";
 
 const NewCase = () => {
-  const { toast } = useToast();
+
   const navigate = useNavigate();
   
   // Form states for new case
@@ -51,11 +51,7 @@ const NewCase = () => {
 
   const handleCreateCase = () => {
     if (!newCase.name || !newCase.caseId) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
+
       return;
     }
 
@@ -101,10 +97,7 @@ const NewCase = () => {
     addCase(caseData);
     setNewCase({ name: "", caseId: "", description: "", address: "", blockchain: "Ethereum", alertGroupId: "" });
     
-    toast({
-      title: "Case Created",
-      description: `Case ${newCase.caseId} has been created successfully${newCase.address ? ' with address' : ''}`,
-    });
+
 
     // Navigate to manage cases page after creation
     navigate("/cases");
@@ -112,11 +105,7 @@ const NewCase = () => {
 
   const handleCreateAlertGroup = () => {
     if (!newAlertGroup.name || !newAlertGroup.email) {
-      toast({
-        title: "Error",
-        description: "Please fill in group name and at least one email",
-        variant: "destructive",
-      });
+
       return;
     }
 
@@ -130,10 +119,7 @@ const NewCase = () => {
     setAlertGroups([...alertGroups, alertGroupData]);
     setNewAlertGroup({ name: "", email: "" });
     
-    toast({
-      title: "Alert Group Created",
-      description: `Alert group "${newAlertGroup.name}" has been created successfully`,
-    });
+
   };
 
   return (

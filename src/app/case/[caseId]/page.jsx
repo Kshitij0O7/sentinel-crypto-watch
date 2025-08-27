@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+
 import { ArrowLeft, Calendar, MapPin, Wallet, DollarSign, Activity, AlertTriangle, Eye, Users } from "lucide-react";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
 import {getTotalAssets, getWalletBalance, getWalletLastActivity, getRecentTransactions} from "@/api/bitquery-api";
@@ -15,7 +15,7 @@ import { updateCase } from "../../../api/case-api";
 const CaseDetail = () => {
   const { caseId } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
+
   const [caseData, setCaseData] = useState(null);
   const [selectedAlertGroupId, setSelectedAlertGroupId] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
