@@ -48,6 +48,129 @@ export const getTotalAssets = async (addresses) => {
     }
 };
 
+export const getWalletBalance = async (address) => {
+  const cacheKey = `balance_${address}`;
+  const cached = apiCache.get(cacheKey);
+  if (cached) return cached;
+
+  let query = `
+    query GetWalletBalance {
+      EVM(dataset: combined) {
+        balance: BalanceUpdates(
+          where: {BalanceUpdate: {Address: {is: "${address}"}}, Currency: {SmartContract: {is: "0x"}}}
+        ) {
+          sum(of: BalanceUpdate_Amount, selectWhere: {gt: "0"})
+          usd: sum(of: BalanceUpdate_AmountInUSD, selectWhere: {gt: "0"})
+        }
+      }
+    }
+  `;
+  config.data.query = query;
+
+  try {
+    const response = await axios.request(config);
+    const result = {
+      balance: response.data.data.EVM.balance[0]?.sum || "0",
+      usd: response.data.data.EVM.balance[0]?.usd || "0"
+    };
+    apiCache.set(cacheKey, result, 3 * 60 * 1000); // Cache for 3 minutes
+    return result;
+  } catch (error) {
+    console.error("Could not get wallet balance:", error);
+    return { balance: "0", usd: "0" };
+  }
+};
+
+export const getWalletTokens = async (address) => {
+  const cacheKey = `tokens_${address}`;
+  const cached = apiCache.get(cacheKey);
+  if (cached) return cached;
+
+  let query = `
+    query GetWalletTokens {
+      EVM(dataset: combined) {
+        tokens: BalanceUpdates(
+          where: {BalanceUpdate: {Address: {is: "${address}"}}}
+        ) {
+          uniq(of: Currency_SmartContract)
+        }
+      }
+    }
+  `;
+  config.data.query = query;
+
+  try {
+    const response = await axios.request(config);
+    const result = response.data.data.EVM.tokens[0]?.uniq || 0;
+    apiCache.set(cacheKey, result, 5 * 60 * 1000); // Cache for 5 minutes
+    return result;
+  } catch (error) {
+    console.error("Could not get wallet tokens:", error);
+    return 0;
+  }
+};
+
+export const getWalletTransactionCount = async (address) => {
+  const cacheKey = `txCount_${address}`;
+  const cached = apiCache.get(cacheKey);
+  if (cached) return cached;
+
+  let query = `
+    query GetWalletTransactionCount {
+      EVM(dataset: combined) {
+        transactions: Transactions(
+          where: {TransactionStatus: {Success: true}, Transaction: {From: {is: "${address}"}}}
+        ) {
+          count
+        }
+      }
+    }
+  `;
+  config.data.query = query;
+
+  try {
+    const response = await axios.request(config);
+    const result = response.data.data.EVM.transactions[0]?.count || 0;
+    apiCache.set(cacheKey, result, 2 * 60 * 1000); // Cache for 2 minutes
+    return result;
+  } catch (error) {
+    console.error("Could not get wallet transaction count:", error);
+    return 0;
+  }
+};
+
+export const getWalletLastActivity = async (address) => {
+  const cacheKey = `lastActivity_${address}`;
+  const cached = apiCache.get(cacheKey);
+  if (cached) return cached;
+
+  let query = `
+    query GetWalletLastActivity {
+      EVM(dataset: combined) {
+        lastTransaction: Transactions(
+          where: {TransactionStatus: {Success: true}, Transaction: {From: {is: "${address}"}}}
+        ) {
+          Block {
+            Date(maximum: Block_Date)
+          }
+        }
+      }
+    }
+  `;
+  config.data.query = query;
+
+  try {
+    const response = await axios.request(config);
+    const result = response.data.data.EVM.lastTransaction[0]?.Block?.Date || "";
+    apiCache.set(cacheKey, result, 1 * 60 * 1000); // Cache for 1 minute
+    return result;
+  } catch (error) {
+    console.error("Could not get wallet last activity:", error);
+    return "";
+  }
+};
+
+// Keep the original getStats function for backward compatibility
 export const getStats = async (address) => {
   const cacheKey = `stats_${address}`;
   const cached = apiCache.get(cacheKey);
