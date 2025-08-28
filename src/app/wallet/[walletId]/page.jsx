@@ -158,7 +158,7 @@ const WalletDetails = () => {
               <div className="space-y-4">
                 <div>
                   <h4 className="font-medium text-sm text-muted-foreground">Address</h4>
-                  <p className="font-mono text-sm break-all">{walletDetails.address}</p>
+                  <p className="font-mono text-sm break-words">{walletDetails.address}</p>
                 </div>
                 <div className="flex items-center gap-4 text-sm">
                   <div className="flex items-center gap-1">
@@ -245,13 +245,13 @@ const WalletDetails = () => {
                           <Wallet className="h-5 w-5 text-primary" />
                         </div>
                         <div>
-                          <p className="font-medium">{token.name}</p>
-                          <p className="text-sm text-muted-foreground">{token.symbol}</p>
+                          <p className="font-medium break-words">{token.name}</p>
+                          <p className="text-sm text-muted-foreground break-words">{token.symbol}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold">{token.balance}</p>
-                        <p className="text-sm text-muted-foreground">${token.value}</p>
+                        <p className="font-semibold break-words">{token.balance}</p>
+                        <p className="text-sm text-muted-foreground break-words">${token.value}</p>
                       </div>
                     </div>
                   ))}
@@ -294,8 +294,8 @@ const WalletDetails = () => {
                           <Activity className="h-5 w-5 text-primary" />
                         </div>
                         <div>
-                          <p className="font-mono text-sm">Hash: {tx.hash.slice(0, 8)}...</p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="font-mono text-sm break-words">Hash: {tx.hash.slice(0, 8)}...</p>
+                          <p className="text-xs text-muted-foreground break-words">
                             {tx.timestamp} • {tx.amount} {tx.currency}
                           </p>
                         </div>
@@ -304,7 +304,7 @@ const WalletDetails = () => {
                         <Badge variant={tx.status === 'confirmed' ? 'default' : 'secondary'}>
                           {tx.status}
                         </Badge>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-xs text-muted-foreground mt-1 break-words">
                           Block #{tx.blockHeight}
                         </p>
                       </div>
