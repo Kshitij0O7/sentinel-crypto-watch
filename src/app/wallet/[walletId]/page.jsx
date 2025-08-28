@@ -4,15 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, MapPin, Wallet, DollarSign, Activity, AlertTriangle, Eye, Users, Download, Copy } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
 import {getWalletBalance, getWalletTokens, getWalletTransactionCount, getWalletLastActivity, getTransactionHistory, getHoldings} from "@/api/bitquery-api";
-import { toast } from "@/hooks/use-notification";
+import { useNotification } from "@/hooks/use-notification";
 import jsPDF from "jspdf";
 
 const WalletDetails = () => {
   const { walletId } = useParams();
   const navigate = useNavigate();
+  const { showSuccess, showError } = useNotification();
 
   const [walletDetails, setWalletDetails] = useState({
     address: walletId,
@@ -95,10 +95,7 @@ const WalletDetails = () => {
 
   const generateBalanceReport = () => {
     if (!walletDetails.holdings.length) {
-      toast({
-        title: "No Data",
-        description: "Token holdings are empty, cannot generate report.",
-      });
+      showError("Token holdings are empty, cannot generate report.");
       return;
     }
   
@@ -116,14 +113,12 @@ const WalletDetails = () => {
     });
   
     doc.save(`balance-report-${walletDetails.address}.pdf`);
+    showSuccess("Balance report generated successfully!");
   };
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-    toast({
-      title: "Copied",
-      description: "Address copied to clipboard",
-    });
+    showSuccess("Address copied to clipboard");
   };
 
   return (
@@ -229,7 +224,7 @@ const WalletDetails = () => {
               </CardTitle>
               <CardDescription>
                 {!walletLoaded ? (
-                  <Skeleton className="h-4 w-32" />
+                  "Loading..."
                 ) : (
                   `${walletDetails.holdings.length} token${walletDetails.holdings.length !== 1 ? 's' : ''} found`
                 )}
@@ -278,7 +273,7 @@ const WalletDetails = () => {
               </CardTitle>
               <CardDescription>
                 {!walletLoaded ? (
-                  <Skeleton className="h-4 w-32" />
+                  "Loading..."
                 ) : (
                   `Latest ${walletDetails.transactions.length} transaction${walletDetails.transactions.length !== 1 ? 's' : ''}`
                 )}

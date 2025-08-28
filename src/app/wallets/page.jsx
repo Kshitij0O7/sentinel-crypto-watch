@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowUpDown, Search, Eye, Wallet, DollarSign, Activity } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
 import { getWallets } from "@/api/wallets";
 import {getWalletBalance, getWalletLastActivity, getTotalAssets} from "@/api/bitquery-api";
@@ -179,7 +178,9 @@ const MonitoredWallets = () => {
             <CardTitle>Wallet Addresses</CardTitle>
             <CardDescription>
               {!walletsLoaded ? (
-                <Skeleton className="h-4 w-48" />
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Loading wallets...</p>
+                </div>
               ) : (
                 `Showing ${filteredAndSortedWallets.length} wallet${filteredAndSortedWallets.length !== 1 ? 's' : ''}`
               )}

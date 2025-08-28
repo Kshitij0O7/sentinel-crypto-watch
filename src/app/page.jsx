@@ -17,11 +17,11 @@ const Index = () => {
             <p className="text-muted-foreground">Overview of seized crypto assets and recent activity</p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => navigate("/new-case")} className="flex items-center gap-2">
+            <Button onClick={() => navigate("/new-case")} className="flex items-center gap-2 min-w-fit px-4">
               <Plus className="h-4 w-4" />
               New Case
             </Button>
-            <Button onClick={() => navigate("/cases")} className="flex items-center gap-2">
+            <Button onClick={() => navigate("/cases")} className="flex items-center gap-2 min-w-fit px-4">
               <FolderOpen className="h-4 w-4" />
               Manage Cases
             </Button>

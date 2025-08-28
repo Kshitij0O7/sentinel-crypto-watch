@@ -303,8 +303,8 @@ const MonitoringDashboard = () => {
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold break-words">2</div>
+            <p className="text-xs text-muted-foreground break-words">
               Click to manage cases
             </p>
           </CardContent>
@@ -316,14 +316,14 @@ const MonitoringDashboard = () => {
             <Eye className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold break-words">
               {!walletsLoaded ? (
                 "Loading..."
               ) : (
                 walletAddresses.length
               )}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground break-words">
               Click to view all wallets
             </p>
           </CardContent>
@@ -335,8 +335,8 @@ const MonitoringDashboard = () => {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-warning">2</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold text-warning break-words">2</div>
+            <p className="text-xs text-muted-foreground break-words">
               Click to view all activity
             </p>
           </CardContent>
@@ -348,14 +348,14 @@ const MonitoringDashboard = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold break-words">
               {!metricsLoaded ? (
                 "Loading..."
               ) : (
                 `${balance} ETH`
               )}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground break-words">
               Click to view all assets
             </p>
           </CardContent>
@@ -416,7 +416,7 @@ const MonitoringDashboard = () => {
           <Button 
             onClick={handleAddWallet} 
             disabled={addingWallet}
-            className="w-full md:w-auto"
+            className="w-full md:w-auto min-w-fit px-4"
           >
             {addingWallet ? (
               <>
@@ -458,12 +458,12 @@ const MonitoringDashboard = () => {
                         {wallet.status}
                       </Badge>
                     </div>
-                    <p className="font-mono text-sm">{wallet.address}</p>
+                    <p className="font-mono text-sm break-words">{wallet.address}</p>
                     <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                      <span>Case: {wallet.caseId}</span>
-                      <span>Seized: {wallet.dateSeized}</span>
-                      <span>Added to System: {wallet.dateAdded}</span>
-                      <span>Balance: {wallet.balance === '0' && wallet.lastActivity === '' ? 'Updating...' : wallet.balance ?? 'Loading...'}</span>
+                      <span className="break-words">Case: {wallet.caseId}</span>
+                      <span className="break-words">Seized: {wallet.dateSeized}</span>
+                      <span className="break-words">Added to System: {wallet.dateAdded}</span>
+                      <span className="break-words">Balance: {wallet.balance === '0' && wallet.lastActivity === '' ? 'Updating...' : wallet.balance ?? 'Loading...'}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 mt-4 md:mt-0">
@@ -541,11 +541,11 @@ const MonitoringDashboard = () => {
                       </Badge>
                     </div>
                     <div className="space-y-1">
-                      <p className="font-mono text-sm">Hash: {tx.hash}</p>
-                      <p className="text-sm">
+                      <p className="font-mono text-sm break-words">Hash: {tx.hash}</p>
+                      <p className="text-sm break-words">
                         <span className="font-medium">Amount:</span> {tx.amount} {tx.currency}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-muted-foreground break-words">
                         {tx.timestamp}
                       </p>
                     </div>

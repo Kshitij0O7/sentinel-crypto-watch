@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Clock, Search, ExternalLink, Activity, AlertCircle, CheckCircle, Loader } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
 import {getRecentTransactions} from "@/api/bitquery-api";
 import {getWallets} from "@/api/wallets";
@@ -203,7 +202,9 @@ const RecentActivity = () => {
             <CardTitle>Transaction History</CardTitle>
             <CardDescription>
               {!transactionsLoaded ? (
-                <Skeleton className="h-4 w-48" />
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Loading transactions...</p>
+                </div>
               ) : (
                 `Showing ${filteredTransactions.length} transaction${filteredTransactions.length !== 1 ? 's' : ''}`
               )}

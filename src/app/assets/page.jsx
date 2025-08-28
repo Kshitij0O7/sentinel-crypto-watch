@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, DollarSign, Bitcoin, Shield, TrendingUp, TrendingDown, Calendar, MapPin, Eye } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
 import { getAssets, updateAssets } from "@/api/wallets";
 import {getWalletBalance, getWalletTokens} from "@/api/bitquery-api";
@@ -174,7 +173,9 @@ const AssetsUnderSeizure = () => {
             <CardTitle>Seized Assets</CardTitle>
             <CardDescription>
               {!assetsLoaded ? (
-                <Skeleton className="h-4 w-48" />
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Loading assets...</p>
+                </div>
               ) : (
                 `Showing ${seizedAssets.length} seized asset${seizedAssets.length !== 1 ? 's' : ''}`
               )}

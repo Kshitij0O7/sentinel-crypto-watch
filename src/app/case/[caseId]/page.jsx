@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 
 import { ArrowLeft, Calendar, MapPin, Wallet, DollarSign, Activity, AlertTriangle, Eye, Users } from "lucide-react";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
@@ -207,53 +206,45 @@ const CaseDetail = () => {
               Back to Cases
             </Button>
             <div>
-              <Skeleton className="h-8 w-64 mb-2" />
-              <Skeleton className="h-4 w-32" />
+              <h1 className="text-3xl font-bold">Loading Case...</h1>
+              <p className="text-muted-foreground">Please wait while we load the case details</p>
             </div>
           </div>
           
           <div className="space-y-6">
-            {/* Case Overview Skeleton */}
+            {/* Case Overview Loading */}
             <Card>
               <CardHeader>
-                <Skeleton className="h-6 w-32 mb-2" />
-                <Skeleton className="h-4 w-48" />
+                <CardTitle>Case Overview</CardTitle>
+                <CardDescription>Loading case information...</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="space-y-2">
-                      <Skeleton className="h-4 w-20" />
-                      <Skeleton className="h-6 w-16" />
-                    </div>
-                  ))}
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">Status</p>
+                    <p className="text-lg font-semibold">Loading...</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">Total Value</p>
+                    <p className="text-lg font-semibold">Loading...</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">Wallet Addresses</p>
+                    <p className="text-lg font-semibold">Loading...</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Wallet Addresses Skeleton */}
+            {/* Wallet Addresses Loading */}
             <Card>
               <CardHeader>
-                <Skeleton className="h-6 w-40 mb-2" />
-                <Skeleton className="h-4 w-64" />
+                <CardTitle>Wallet Addresses</CardTitle>
+                <CardDescription>Loading wallet information...</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {[...Array(2)].map((_, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <Skeleton className="h-10 w-10 rounded-full" />
-                        <div>
-                          <Skeleton className="h-4 w-32 mb-1" />
-                          <Skeleton className="h-3 w-24" />
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <Skeleton className="h-4 w-20 mb-1" />
-                        <Skeleton className="h-3 w-16" />
-                      </div>
-                    </div>
-                  ))}
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Loading wallet addresses...</p>
                 </div>
               </CardContent>
             </Card>
