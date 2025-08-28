@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Clock, Search, ExternalLink, Activity, AlertCircle, CheckCircle, Loader } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
 import {getRecentTransactions} from "@/api/bitquery-api";
 import {getWallets} from "@/api/wallets";
@@ -14,7 +15,7 @@ const RecentActivity = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [transactions, setRecentTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [transactionsLoaded, setTransactionsLoaded] = useState(false);
 
   const filteredTransactions = transactions.filter(tx => 
     tx.hash.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -26,6 +27,7 @@ const RecentActivity = () => {
 
   useEffect(()=>{
     const fetchTransactions = async () => {
+      setTransactionsLoaded(false);
       try{
         const wallets = getWallets();
         const addresses = wallets.map(wallet => wallet.address);
@@ -44,11 +46,11 @@ const RecentActivity = () => {
           caseId: "CPIB-2024-001"
         }));
         
-        setRecentTransactions(formattedTransactions);        
+        setRecentTransactions(formattedTransactions);
+        setTransactionsLoaded(true);
       } catch (error){
         console.error('Error getting Recent Transactions:', error);
-      } finally{
-        setLoading(false);
+        setTransactionsLoaded(true);
       }
     };
 
@@ -86,23 +88,35 @@ const RecentActivity = () => {
     return `${address.slice(0, 6)}...${address.slice(-6)}`;
   };
 
-  const truncateHash = (hash) => {
-    return `${hash.slice(0, 10)}...${hash.slice(-10)}`;
-  };
-
   return (
-    <>
-    {loading ? (<div className="w-full mx-auto text-center">Loading activity data...</div>) : (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
       <CryptoMonitoringHeader />
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
-            <Activity className="h-8 w-8" />
-            Recent Activity
-          </h1>
-          <p className="text-muted-foreground">All recent transactions from monitored wallet addresses</p>
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h2 className="text-2xl font-bold">Recent Activity</h2>
+            <p className="text-muted-foreground">Monitor recent cryptocurrency transactions from seized wallets</p>
+          </div>
+          <Button onClick={() => navigate("/")} className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
         </div>
+
+        {/* Search */}
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by hash, address, or case ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -112,130 +126,158 @@ const RecentActivity = () => {
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{transactions.length}</div>
+              <div className="text-2xl font-bold">
+                {!transactionsLoaded ? (
+                  "Loading..."
+                ) : (
+                  filteredTransactions.length
+                )}
+              </div>
               <p className="text-xs text-muted-foreground">
-                Last 30 days
+                Detected transactions
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Confirmed</CardTitle>
+              <CheckCircle className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">
+                {!transactionsLoaded ? (
+                  "Loading..."
+                ) : (
+                  filteredTransactions.filter(tx => tx.status === 'confirmed').length
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Successful transactions
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Failed</CardTitle>
+              <AlertCircle className="h-4 w-4 text-red-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">
+                {!transactionsLoaded ? (
+                  "Loading..."
+                ) : (
+                  filteredTransactions.filter(tx => tx.status === 'failed').length
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Failed transactions
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Volume</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {!transactionsLoaded ? (
+                  "Loading..."
+                ) : (
+                  `${filteredTransactions.reduce((sum, tx) => sum + parseFloat(tx.amount), 0).toFixed(6)} ETH`
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Transaction volume
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Search */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Search Transactions</CardTitle>
-            <CardDescription>Filter transactions by hash, address, case ID, or currency</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search transactions..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Transactions Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Transaction History ({filteredTransactions.length})</CardTitle>
+            <CardTitle>Transaction History</CardTitle>
             <CardDescription>
-              Detailed view of all recent transaction activity from monitored addresses
+              {!transactionsLoaded ? (
+                <Skeleton className="h-4 w-48" />
+              ) : (
+                `Showing ${filteredTransactions.length} transaction${filteredTransactions.length !== 1 ? 's' : ''}`
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Transaction Hash</TableHead>
-                    <TableHead>From Address</TableHead>
-                    <TableHead>To Address</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Fee</TableHead>
-                    <TableHead>Case ID</TableHead>
-                    <TableHead>Timestamp</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTransactions.map((tx) => (
-                    <TableRow key={tx.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {getStatusIcon(tx.status)}
+            {!transactionsLoaded ? (
+              // Show loading text while loading
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Loading transactions...</p>
+              </div>
+            ) : filteredTransactions.length > 0 ? (
+              <div className="space-y-3">
+                {filteredTransactions.map((tx) => (
+                  <div
+                    key={tx.id}
+                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        {getStatusIcon(tx.status)}
+                      </div>
+                      <div>
+                        <p className="font-mono text-sm font-medium">Hash: {truncateAddress(tx.hash)}</p>
+                        <div className="flex gap-2 mt-1">
+                          <Badge variant="outline">{tx.currency}</Badge>
                           <Badge variant={getStatusVariant(tx.status)}>
                             {tx.status}
                           </Badge>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-sm">{truncateHash(tx.hash)}</span>
-                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                            <ExternalLink className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-mono text-sm">{truncateAddress(tx.from)}</span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-mono text-sm">{truncateAddress(tx.to)}</span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">{tx.currency}</Badge>
-                          <span className="font-medium">{tx.amount}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm text-muted-foreground">
-                          {tx.transactionFee || 'N/A'}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        {tx.caseId && (
-                          <Badge variant="secondary" className="text-xs">
-                            {tx.caseId}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          <div>{tx.timestamp.split(' ')[0]}</div>
-                          <div className="text-muted-foreground text-xs">
-                            {tx.timestamp.split(' ')[1]}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="outline" size="sm">
-                          Investigate
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              {filteredTransactions.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No transactions found matching your search criteria.</p>
-                </div>
-              )}
-            </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-semibold">{tx.amount} {tx.currency}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {tx.timestamp} • Block #{tx.blockHeight}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm">
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        View on Explorer
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                {searchTerm ? (
+                  <div>
+                    <p className="text-muted-foreground">No transactions found matching "{searchTerm}"</p>
+                    <Button
+                      variant="outline"
+                      onClick={() => setSearchTerm("")}
+                      className="mt-2"
+                    >
+                      Clear Search
+                    </Button>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-muted-foreground">No transactions found</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Transactions will appear here as they are detected from monitored wallets
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
     </div>
-    )}
-    </>
   );
 };
 

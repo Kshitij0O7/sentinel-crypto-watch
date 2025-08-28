@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { ArrowLeft, Calendar, MapPin, Wallet, DollarSign, Activity, AlertTriangle, Eye, Users } from "lucide-react";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
@@ -19,10 +20,9 @@ const CaseDetail = () => {
   const [caseData, setCaseData] = useState(null);
   const [selectedAlertGroupId, setSelectedAlertGroupId] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [addressesLoading, setAddressesLoading] = useState(false);
-  const [transactionsLoading, setTransactionsLoading] = useState(false);
-  const [totalValueLoading, setTotalValueLoading] = useState(false);
+  const [addressesLoaded, setAddressesLoaded] = useState(false);
+  const [transactionsLoaded, setTransactionsLoaded] = useState(false);
+  const [totalValueLoaded, setTotalValueLoaded] = useState(false);
 
   // Mock data for alert groups
   const alertGroups = [
@@ -67,7 +67,7 @@ const CaseDetail = () => {
       }
 
       // Load wallet addresses progressively
-      setAddressesLoading(true);
+      setAddressesLoaded(false);
       try {
         const updatedAddresses = await Promise.all(
           foundCase.addresses.map(async (wallet) => {
@@ -96,14 +96,14 @@ const CaseDetail = () => {
           ...prev,
           addresses: updatedAddresses
         }));
+        setAddressesLoaded(true);
       } catch (error) {
         console.error(`Failed to fetch wallet addresses:`, error);
-      } finally {
-        setAddressesLoading(false);
+        setAddressesLoaded(true);
       }
 
       // Load total value independently
-      setTotalValueLoading(true);
+      setTotalValueLoaded(false);
       try {
         const addresses = foundCase.addresses.map(wallet => wallet.address);
         const updatedValue = await getTotalAssets(JSON.stringify(addresses));
@@ -111,14 +111,14 @@ const CaseDetail = () => {
           ...prev,
           totalValue: parseFloat(updatedValue).toFixed(2)
         }));
+        setTotalValueLoaded(true);
       } catch (error) {
         console.error(`Failed to fetch total value:`, error);
-      } finally {
-        setTotalValueLoading(false);
+        setTotalValueLoaded(true);
       }
 
       // Load transactions independently
-      setTransactionsLoading(true);
+      setTransactionsLoaded(false);
       try {
         const addresses = foundCase.addresses.map(wallet => wallet.address);
         const transactions = await getRecentTransactions(JSON.stringify(addresses));
@@ -137,10 +137,10 @@ const CaseDetail = () => {
           ...prev,
           recentTransactions: formattedTransactions
         }));
+        setTransactionsLoaded(true);
       } catch (error) {
         console.error(`Failed to fetch transactions:`, error);
-      } finally {
-        setTransactionsLoading(false);
+        setTransactionsLoaded(true);
       }
     };
 
@@ -178,11 +178,7 @@ const CaseDetail = () => {
     return alertGroups.find(g => g.id === caseData.alertGroupId);
   };
 
-  if (!caseData) {
-    return <div className="w-full mx-auto text-center">Loading case data...</div>; // or a spinner
-  }
-
-  if (!caseData) {
+  if (!foundCase) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted">
         <CryptoMonitoringHeader />
@@ -193,6 +189,74 @@ const CaseDetail = () => {
             <Button onClick={() => navigate("/cases")} className="mt-4">
               Back to Cases
             </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show skeleton loading if case data is not yet initialized
+  if (!caseData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+        <CryptoMonitoringHeader />
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="flex items-center gap-4 mb-6">
+            <Button variant="outline" onClick={() => navigate("/cases")} className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Cases
+            </Button>
+            <div>
+              <Skeleton className="h-8 w-64 mb-2" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+          </div>
+          
+          <div className="space-y-6">
+            {/* Case Overview Skeleton */}
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-32 mb-2" />
+                <Skeleton className="h-4 w-48" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-6 w-16" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Wallet Addresses Skeleton */}
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-40 mb-2" />
+                <Skeleton className="h-4 w-64" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {[...Array(2)].map((_, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <Skeleton className="h-10 w-10 rounded-full" />
+                        <div>
+                          <Skeleton className="h-4 w-32 mb-1" />
+                          <Skeleton className="h-3 w-24" />
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <Skeleton className="h-4 w-20 mb-1" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
@@ -221,7 +285,7 @@ const CaseDetail = () => {
       case 'resolved':
         return 'secondary';
       default:
-        return 'default';
+        return 'outline';
     }
   };
 
@@ -279,212 +343,142 @@ const CaseDetail = () => {
                             ))}
                           </SelectContent>
                         </Select>
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                            Cancel
-                          </Button>
-                          <Button onClick={handleAssociateAlertGroup}>
-                            Associate Group
-                          </Button>
-                        </div>
+                        <Button onClick={handleAssociateAlertGroup} className="w-full">
+                          Associate Alert Group
+                        </Button>
                       </div>
                     </DialogContent>
                   </Dialog>
-                  <Badge variant={getStatusColor(caseData.status)}>
-                    {caseData.status.replace('_', ' ').toUpperCase()}
-                  </Badge>
                 </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium text-sm text-muted-foreground">Description</h4>
-                    <p className="text-sm">{caseData.description}</p>
-                  </div>
-                  <div className="flex items-center gap-4 text-sm">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      <span>Created: {caseData.createdDate}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      <span>Investigator: {caseData.investigator}</span>
-                    </div>
-                    {getCurrentAlertGroup() && (
-                      <div className="flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        <span>Alert Group: {getCurrentAlertGroup().name}</span>
-                      </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <Badge variant={getStatusColor(caseData.status)}>{caseData.status}</Badge>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Total Value</p>
+                  <div className="text-2xl font-bold">
+                    {!totalValueLoaded ? (
+                      "Loading..."
+                    ) : (
+                      `${caseData.totalValue} ETH`
                     )}
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div className="bg-accent/30 p-3 rounded-lg">
-                      <div className="text-2xl font-bold">
-                        {addressesLoading ? "..." : caseData.addresses.length}
-                      </div>
-                      <div className="text-xs text-muted-foreground">Addresses</div>
-                    </div>
-                    <div className="bg-accent/30 p-3 rounded-lg">
-                      <div className="text-2xl font-bold">
-                        {totalValueLoading ? "..." : caseData.totalValue || "0"}
-                      </div>
-                      <div className="text-xs text-muted-foreground">{caseData.currency}</div>
-                    </div>
-                    <div className="bg-accent/30 p-3 rounded-lg">
-                      <div className="text-2xl font-bold text-red-600">{caseData.alerts.filter(a => a.status === 'new').length}</div>
-                      <div className="text-xs text-muted-foreground">New Alerts</div>
-                    </div>
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Wallet Addresses</p>
+                  <div className="text-2xl font-bold">
+                    {!addressesLoaded ? (
+                      "Loading..."
+                    ) : (
+                      caseData.addresses.length
+                    )}
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Associated Wallets */}
+          {/* Wallet Addresses */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Wallet className="h-5 w-5" />
-                Associated Wallets ({caseData.addresses.length})
+                Wallet Addresses
               </CardTitle>
               <CardDescription>
-                All wallet addresses associated with this case
+                Seized crypto wallet addresses associated with this case
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {addressesLoading ? (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                    <p className="text-muted-foreground">Loading wallet data...</p>
-                  </div>
-                ) : caseData.addresses.length > 0 ? (
-                  caseData.addresses.map((address) => (
-                    <div key={address.id} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline">{address.blockchain}</Badge>
-                            {address.privateLabel && (
-                              <Badge variant="secondary">{address.privateLabel}</Badge>
-                            )}
-                            <span className="text-lg font-semibold text-primary">
-                              {address.balance} {address.blockchain === 'Ethereum' ? 'ETH' : 'BTC'}
-                            </span>
-                          </div>
-                          <code className="text-sm bg-accent/50 px-2 py-1 rounded break-all">
-                            {address.address}
-                          </code>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span>Seized: {address.dateSeized}</span>
-                            <span>Last Activity: {address.lastActivity}</span>
-                          </div>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => navigate(`/wallet/${address.address}`)}
-                          className="flex items-center gap-2"
-                        >
-                          <Eye className="h-4 w-4" />
-                          View Details
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No addresses found
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Recent Transactions */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5" />
-                  Recent Transactions
-                </CardTitle>
-                <CardDescription>
-                  Latest blockchain transactions
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {transactionsLoading ? (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                      <p className="text-muted-foreground">Loading transactions...</p>
-                    </div>
-                  ) : caseData.recentTransactions && caseData.recentTransactions.length > 0 ? (
-                    caseData.recentTransactions.map((tx) => (
-                      <div key={tx.id} className="border rounded-lg p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <Badge variant="outline">{tx.status}</Badge>
-                          <span className="text-sm font-medium">
-                            {tx.amount} {tx.currency}
-                          </span>
-                        </div>
-                        <div className="space-y-1 text-xs text-muted-foreground">
-                          <div>From: <code className="bg-accent/50 px-1 rounded">{tx.from.slice(0, 10)}...</code></div>
-                          <div>To: <code className="bg-accent/50 px-1 rounded">{tx.to.slice(0, 10)}...</code></div>
-                          <div>Hash: <code className="bg-accent/50 px-1 rounded">{tx.hash}</code></div>
-                          <div>{tx.timestamp}</div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      No transactions found
-                    </div>
-                  )}
+              {!addressesLoaded ? (
+                // Show loading text while loading
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Loading wallet addresses...</p>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Alerts */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5" />
-                  Active Alerts ({caseData.alerts.length})
-                </CardTitle>
-                <CardDescription>
-                  Monitoring alerts for this case
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+              ) : caseData.addresses.length > 0 ? (
                 <div className="space-y-3">
-                  {caseData.alerts.map((alert) => (
-                    <div key={alert.id} className="border rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge variant={getAlertStatusColor(alert.status)}>
-                          {alert.status}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {alert.timestamp}
-                        </span>
+                  {caseData.addresses.map((wallet, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Wallet className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-mono text-sm">{wallet.address}</p>
+                          <p className="text-xs text-muted-foreground">Added: {wallet.dateAdded}</p>
+                        </div>
                       </div>
-                      <p className="text-sm">{alert.message}</p>
-                      {alert.amount && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Amount: {alert.amount}
+                      <div className="text-right">
+                        <p className="font-semibold">{wallet.balance} ETH</p>
+                        <p className="text-xs text-muted-foreground">
+                          Last activity: {wallet.lastActivity || 'No activity'}
                         </p>
-                      )}
+                      </div>
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No wallet addresses found for this case.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Recent Transactions */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Recent Transactions
+              </CardTitle>
+              <CardDescription>
+                Latest detected transactions from monitored addresses in this case
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!transactionsLoaded ? (
+                // Show loading text while loading
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Loading transactions...</p>
+                </div>
+              ) : caseData.recentTransactions.length > 0 ? (
+                <div className="space-y-3">
+                  {caseData.recentTransactions.map((tx) => (
+                    <div key={tx.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Activity className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-mono text-sm">Hash: {tx.hash}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {tx.timestamp} • {tx.amount} {tx.currency}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <Badge variant={tx.status === 'confirmed' ? 'default' : 'secondary'}>
+                          {tx.status}
+                        </Badge>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {tx.from.slice(0, 6)}...{tx.from.slice(-4)} → {tx.to.slice(0, 6)}...{tx.to.slice(-4)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No transactions found for this case.
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

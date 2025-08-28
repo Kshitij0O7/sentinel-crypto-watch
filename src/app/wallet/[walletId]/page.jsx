@@ -1,27 +1,18 @@
-import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Activity, DollarSign, Clock, AlertTriangle, Copy, ChevronDown, Coins } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Wallet, DollarSign, Activity, AlertTriangle, Eye, Users, Download, Copy } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import CryptoMonitoringHeader from "@/components/CryptoMonitoringHeader";
-
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import {getWalletBalance, getWalletTokens, getWalletTransactionCount, getWalletLastActivity, getTransactionHistory, getHoldings} from "@/api/bitquery-api";
+import { toast } from "@/hooks/use-notification";
 import jsPDF from "jspdf";
-import {getWalletBalance, getWalletTokens, getWalletTransactionCount, getWalletLastActivity, getTransactionHistory, getHoldings} from '@/api/bitquery-api';
-import { symbol } from "zod";
 
 const WalletDetails = () => {
   const { walletId } = useParams();
   const navigate = useNavigate();
-
 
   const [walletDetails, setWalletDetails] = useState({
     address: walletId,
@@ -38,10 +29,11 @@ const WalletDetails = () => {
     lastSeen: "Today",
     tags: ["High Priority", "Investigation Active"]
   });
-  const [loading, setLoading] = useState(true);
+  const [walletLoaded, setWalletLoaded] = useState(false);
 
   useEffect(() => {
     const fetchAllData = async () => {
+      setWalletLoaded(false);
       try {
         const [balanceData, tokenCount, txCount, lastActivity, txHistory, holdings] = await Promise.all([
           getWalletBalance(walletId),
@@ -84,11 +76,10 @@ const WalletDetails = () => {
           transactions: formattedTransactions,
           holdings: formattedHoldings,
         });
+        setWalletLoaded(true);
       } catch (error) {
         console.error("Error fetching wallet data:", error);
-        setLoading(false); // hide loading even if some API fails
-      } finally{
-        setLoading(false);
+        setWalletLoaded(true); // hide loading even if some API fails
       }
     };
   
@@ -136,271 +127,205 @@ const WalletDetails = () => {
   };
 
   return (
-    <>
-    {loading ? (<div className="w-full mx-auto text-center">Loading Wallet data...</div>) : (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
       <CryptoMonitoringHeader />
-      
-      <main className="container mx-auto px-4 py-8 space-y-6">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex items-center gap-4 mb-6">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate("/")}
-            className="flex items-center gap-2"
-          >
+          <Button variant="outline" onClick={() => navigate("/wallets")} className="flex items-center gap-2">
             <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
+            Back to Wallets
           </Button>
+          <div>
+            <h1 className="text-3xl font-bold">Wallet Details</h1>
+            <p className="text-muted-foreground">Detailed analysis of seized crypto wallet</p>
+          </div>
         </div>
 
         {/* Wallet Overview */}
-        <Card>
+        <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              <span>Wallet Details</span>
+              <span>Wallet Overview</span>
               <div className="flex items-center gap-2">
-                <Badge variant={walletDetails.status === 'active' ? 'default' : 'secondary'}>
-                  {walletDetails.status}
-                </Badge>
-                <Badge variant="outline">{walletDetails.blockchain}</Badge>
+                <Button variant="outline" size="sm" onClick={() => copyToClipboard(walletDetails.address)}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy Address
+                </Button>
+                <Button variant="outline" size="sm" onClick={generateBalanceReport}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Generate Report
+                </Button>
               </div>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Wallet Address</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <code className="bg-accent/50 px-2 py-1 rounded text-sm break-all">
-                      {walletDetails.address}
-                    </code>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => copyToClipboard(walletDetails.address)}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
+                  <h4 className="font-medium text-sm text-muted-foreground">Address</h4>
+                  <p className="font-mono text-sm break-all">{walletDetails.address}</p>
+                </div>
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-4 w-4" />
+                    <span>Seized: {walletDetails.dateSeized}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-4 w-4" />
+                    <span>Case: {walletDetails.caseId}</span>
                   </div>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Case ID</label>
-                  <p className="mt-1 font-medium">{walletDetails.caseId}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Date Seized</label>
-                  <p className="mt-1">{walletDetails.dateSeized}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Tags</label>
-                  <div className="flex gap-2 mt-1">
-                    {walletDetails.tags.map((tag, index) => (
-                      <Badge key={index} variant="secondary">{tag}</Badge>
-                    ))}
-                  </div>
+                <div className="flex gap-2">
+                  {walletDetails.tags.map((tag, index) => (
+                    <Badge key={index} variant="secondary">{tag}</Badge>
+                  ))}
                 </div>
               </div>
-              
               <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Current Balance</label>
-                  <p className="mt-1 text-2xl font-bold text-primary">{walletDetails.balance}</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground">Balance</h4>
+                    <p className="text-lg font-semibold">
+                      {!walletLoaded ? (
+                        "Loading..."
+                      ) : (
+                        walletDetails.balance
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground">Total Transactions</h4>
+                    <p className="text-lg font-semibold">
+                      {!walletLoaded ? (
+                        "Loading..."
+                      ) : (
+                        walletDetails.totalTransactions
+                      )}
+                    </p>
+                  </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Total Transactions</label>
-                  <p className="mt-1 text-xl font-semibold">{walletDetails.totalTransactions}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Last Activity</label>
-                  <p className="mt-1">{walletDetails.lastActivity || 'No recent activity'}</p>
-                </div>
-                <div>
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    className="mt-2"
-                    onClick={generateBalanceReport}
-                  >
-                    Download Balance Report
-                </Button>
+                  <h4 className="font-medium text-sm text-muted-foreground">Last Activity</h4>
+                  <p className="text-sm">
+                    {!walletLoaded ? (
+                      "Loading..."
+                    ) : (
+                      walletDetails.lastActivity || 'No recent activity'
+                    )}
+                  </p>
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-
-        {/* Activity Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Token Holdings */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Wallet className="h-5 w-5" />
+                Token Holdings
+              </CardTitle>
+              <CardDescription>
+                {!walletLoaded ? (
+                  <Skeleton className="h-4 w-32" />
+                ) : (
+                  `${walletDetails.holdings.length} token${walletDetails.holdings.length !== 1 ? 's' : ''} found`
+                )}
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{walletDetails.totalTransactions}</div>
-              <p className="text-xs text-muted-foreground">
-                Since monitoring started
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Token Holdings</CardTitle>{/* Add tokens here */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <Coins className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80">
-                  <DropdownMenuLabel>Token Holdings</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
+              {!walletLoaded ? (
+                // Show loading text while loading
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Loading wallet details...</p>
+                </div>
+              ) : walletDetails.holdings.length > 0 ? (
+                <div className="space-y-3">
                   {walletDetails.holdings.map((token, index) => (
-                    <DropdownMenuItem key={index} className="flex-col items-start space-y-1 p-4">
-                      <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">{token.symbol}</Badge>
-                          <span className="font-medium">{token.name}</span>
+                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Wallet className="h-5 w-5 text-primary" />
                         </div>
-                        <span className="text-sm font-semibold text-primary">{token.value}</span>
+                        <div>
+                          <p className="font-medium">{token.name}</p>
+                          <p className="text-sm text-muted-foreground">{token.symbol}</p>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between w-full text-sm text-muted-foreground">
-                        <span>Balance: {token.balance} {token.symbol}</span>
-                        {token.contractAddress && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              copyToClipboard(token.contractAddress);
-                            }}
-                            className="h-6 px-2"
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
-                        )}
+                      <div className="text-right">
+                        <p className="font-semibold">{token.balance}</p>
+                        <p className="text-sm text-muted-foreground">${token.value}</p>
                       </div>
-                      {token.contractAddress && (
-                        <code className="text-xs bg-accent/50 px-2 py-1 rounded break-all w-full block">
-                          {token.contractAddress}
-                        </code>
-                      )}
-                    </DropdownMenuItem>
+                    </div>
                   ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{walletDetails.holdings.length}</div>
-              <p className="text-xs text-muted-foreground">
-                Digital assets held
-              </p>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No token holdings found
+                </div>
+              )}
             </CardContent>
           </Card>
 
+          {/* Recent Transactions */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">First Seen</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Recent Transactions
+              </CardTitle>
+              <CardDescription>
+                {!walletLoaded ? (
+                  <Skeleton className="h-4 w-32" />
+                ) : (
+                  `Latest ${walletDetails.transactions.length} transaction${walletDetails.transactions.length !== 1 ? 's' : ''}`
+                )}
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{walletDetails.firstSeen}</div>
-              <p className="text-xs text-muted-foreground">
-                Initial detection
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Status</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold capitalize">{walletDetails.status}</div>
-              <p className="text-xs text-muted-foreground">
-                Monitoring status
-              </p>
+              {!walletLoaded ? (
+                // Show loading text while loading
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Loading transactions...</p>
+                </div>
+              ) : walletDetails.transactions.length > 0 ? (
+                <div className="space-y-3">
+                  {walletDetails.transactions.slice(0, 5).map((tx) => (
+                    <div key={tx.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Activity className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-mono text-sm">Hash: {tx.hash.slice(0, 8)}...</p>
+                          <p className="text-xs text-muted-foreground">
+                            {tx.timestamp} • {tx.amount} {tx.currency}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <Badge variant={tx.status === 'confirmed' ? 'default' : 'secondary'}>
+                          {tx.status}
+                        </Badge>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Block #{tx.blockHeight}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No transactions found
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
-
-        {/* Transaction History */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Transaction History</CardTitle>
-            <CardDescription>
-              All detected transactions for this wallet address
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {walletDetails.transactions.map((tx) => (
-                <div
-                  key={tx.id}
-                  className="border rounded-lg p-4 space-y-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">{tx.currency}</Badge>
-                      <Badge variant={tx.status === 'confirmed' ? 'default' : 'secondary'}>
-                        {tx.status}
-                      </Badge>
-                    </div>
-                    <span className="text-sm text-muted-foreground">{tx.timestamp}</span>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground">Transaction Hash</label>
-                      <div className="flex items-center gap-2">
-                        <code className="text-xs bg-accent/50 px-2 py-1 rounded break-all">
-                          {tx.hash}
-                        </code>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => copyToClipboard(tx.hash)}
-                        >
-                          <Copy className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">From</label>
-                        <p className="font-mono text-xs break-all">{tx.from}</p>
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">To</label>
-                        <p className="font-mono text-xs break-all">{tx.to}</p>
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">Amount</label>
-                        <p className="font-semibold">{tx.amount} {tx.currency}</p>
-                      </div>
-                    </div>
-                    
-                    {tx.blockHeight && (
-                      <div className="flex gap-4 text-xs text-muted-foreground">
-                        <span>Block: {tx.blockHeight}</span>
-                        {tx.gasUsed && <span>Gas: {tx.gasUsed}</span>}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </main>
+      </div>
     </div>
-    )}
-    </>
   );
 };
 

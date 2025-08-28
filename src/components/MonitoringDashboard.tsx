@@ -9,7 +9,6 @@ import { AlertTriangle, Eye, Plus, Activity, DollarSign, Clock, RefreshCw } from
 
 import {getTotalAssets, getWalletBalance, getWalletLastActivity, getRecentTransactions} from "@/api/bitquery-api";
 import { getWallets, getAssets, addWallet } from "@/api/wallets";
-import DashboardSkeleton from "./DashboardSkeleton";
 import { usePerformance } from "@/hooks/use-performance";
 
 interface WalletAddress {
@@ -45,7 +44,6 @@ const MonitoringDashboard = () => {
   const [newAddress, setNewAddress] = useState("");
   const [selectedCase, setSelectedCase] = useState("");
   const [selectedBlockchain, setSelectedBlockchain] = useState("ethereum");
-  const [loading, setLoading] = useState(true);
   const [metricsLoaded, setMetricsLoaded] = useState(false);
   const [walletsLoaded, setWalletsLoaded] = useState(false);
   const [transactionsLoaded, setTransactionsLoaded] = useState(false);
@@ -280,8 +278,6 @@ const MonitoringDashboard = () => {
         
       } catch (error) {
         console.error('Error in fetchAllData:', error);
-      } finally {
-        if (isMounted) setLoading(false); // stop loading
       }
     };
   
@@ -297,15 +293,8 @@ const MonitoringDashboard = () => {
     };
   }, []);
 
-  // if (loading) {
-  //   return <div className="w-full mx-auto text-center">Loading case data...</div>; // or a spinner
-  // }
-  
-
   return (
-    <>
-    {loading ? <DashboardSkeleton /> : (
-      <div className="space-y-6">
+    <div className="space-y-6">
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => navigate("/cases")}>
@@ -328,7 +317,11 @@ const MonitoringDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {!walletsLoaded ? "..." : walletAddresses.length}
+              {!walletsLoaded ? (
+                "Loading..."
+              ) : (
+                walletAddresses.length
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
               Click to view all wallets
@@ -356,7 +349,11 @@ const MonitoringDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {!metricsLoaded ? "..." : `${balance} ETH`}
+              {!metricsLoaded ? (
+                "Loading..."
+              ) : (
+                `${balance} ETH`
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
               Click to view all assets
@@ -443,37 +440,48 @@ const MonitoringDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {walletAddresses.map((wallet) => (
-              <div
-                key={wallet.id}
-                className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg bg-accent/50"
-              >
-                <div className="space-y-2 md:space-y-0">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{wallet.blockchain}</Badge>
-                    <Badge variant={wallet.status === 'active' ? 'default' : 'secondary'}>
-                      {wallet.status}
-                    </Badge>
-                  </div>
-                  <p className="font-mono text-sm">{wallet.address}</p>
-                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                    <span>Case: {wallet.caseId}</span>
-                    <span>Seized: {wallet.dateSeized}</span>
-                    <span>Added to System: {wallet.dateAdded}</span>
-                    <span>Balance: {wallet.balance === '0' && wallet.lastActivity === '' ? 'Updating...' : wallet.balance ?? 'Loading...'}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 mt-4 md:mt-0">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate(`/wallet/${wallet.address}`)}
-                  >
-                    View Details
-                  </Button>
-                </div>
+            {!walletsLoaded ? (
+              // Show loading text while loading
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Loading wallets...</p>
               </div>
-            ))}
+            ) : walletAddresses.length > 0 ? (
+              walletAddresses.map((wallet) => (
+                <div
+                  key={wallet.id}
+                  className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg bg-accent/50"
+                >
+                  <div className="space-y-2 md:space-y-0">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{wallet.blockchain}</Badge>
+                      <Badge variant={wallet.status === 'active' ? 'default' : 'secondary'}>
+                        {wallet.status}
+                      </Badge>
+                    </div>
+                    <p className="font-mono text-sm">{wallet.address}</p>
+                    <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                      <span>Case: {wallet.caseId}</span>
+                      <span>Seized: {wallet.dateSeized}</span>
+                      <span>Added to System: {wallet.dateAdded}</span>
+                      <span>Balance: {wallet.balance === '0' && wallet.lastActivity === '' ? 'Updating...' : wallet.balance ?? 'Loading...'}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 mt-4 md:mt-0">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => navigate(`/wallet/${wallet.address}`)}
+                    >
+                      View Details
+                    </Button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                No wallets found. Add your first wallet above.
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -515,8 +523,8 @@ const MonitoringDashboard = () => {
         <CardContent>
           <div className="space-y-4">
             {!transactionsLoaded ? (
+              // Show loading text while loading
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
                 <p className="text-muted-foreground">Loading transactions...</p>
               </div>
             ) : recentTransactions.length > 0 ? (
@@ -558,9 +566,6 @@ const MonitoringDashboard = () => {
         </CardContent>
       </Card>
     </div>
-    )}
-    </>
-    
   );
 };
 
