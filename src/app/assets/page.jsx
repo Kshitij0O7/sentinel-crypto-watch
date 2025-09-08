@@ -51,7 +51,7 @@ const AssetsUnderSeizure = () => {
   
     fetchBalances();
 
-    const intervalId = setInterval(fetchBalances, 10000); // 10000ms = 10s
+    const intervalId = setInterval(fetchBalances, 600000); // 600000ms = 10 minutes
 
     // cleanup on unmount
     return () => clearInterval(intervalId);

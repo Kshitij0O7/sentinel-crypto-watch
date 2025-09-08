@@ -86,8 +86,8 @@ const WalletDetails = () => {
     // Fetch data immediately
     fetchAllData();
   
-    // Setup interval for updates every 10 seconds
-    const intervalId = setInterval(fetchAllData, 10000);
+    // Setup interval for updates every 10 minutes
+    const intervalId = setInterval(fetchAllData, 600000);
   
     // Cleanup interval on unmount
     return () => clearInterval(intervalId);

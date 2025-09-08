@@ -284,8 +284,8 @@ const MonitoringDashboard = () => {
     // Initial fetch
     fetchAllData();
   
-    // Polling every 10s
-    const intervalId = setInterval(fetchAllData, 10000);
+    // Polling every 10 minutes
+    const intervalId = setInterval(fetchAllData, 600000);
   
     return () => {
       isMounted = false;

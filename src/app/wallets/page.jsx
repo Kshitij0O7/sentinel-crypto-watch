@@ -22,8 +22,9 @@ const MonitoredWallets = () => {
     const fetchStats = async () => {
       setWalletsLoaded(false);
       try {
+        const currentWallets = getWallets(); // Get fresh data instead of using state
         const updatedWallets = await Promise.all(
-          walletAddresses.map(async (wallet) => {
+          currentWallets.map(async (wallet) => {
             const [balanceData, lastActivity] = await Promise.all([
               getWalletBalance(wallet.address),
               getWalletLastActivity(wallet.address)
@@ -47,11 +48,11 @@ const MonitoredWallets = () => {
 
     fetchStats();
 
-    const intervalId = setInterval(fetchStats, 10000); // 10000ms = 10s
+    const intervalId = setInterval(fetchStats, 600000); // 600000ms = 10 minutes
 
     // cleanup on unmount
     return () => clearInterval(intervalId);
-  }, []);
+  }, []); // Keep empty dependency array since we're using getWallets() directly
 
 
   const filteredAndSortedWallets = walletAddresses
