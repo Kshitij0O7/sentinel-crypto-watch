@@ -307,6 +307,7 @@ const ManageCases = () => {
                       id="dateSeized"
                       type="date"
                       value={newAddress.dateSeized}
+                      max={new Date().toISOString().split('T')[0]}
                       onChange={(e) => setNewAddress({ ...newAddress, dateSeized: e.target.value })}
                     />
                   </div>
