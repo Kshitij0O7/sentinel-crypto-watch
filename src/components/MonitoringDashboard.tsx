@@ -89,13 +89,13 @@ const MonitoringDashboard = () => {
       
       const formattedTransactions: Transaction[] = recentTransactionsResult.map((tx: any, index: number) => ({
         id: (index + 1).toString(),
-        hash: tx.Transaction.Hash,
-        from: tx.Transfer.Sender,
-        to: tx.Transfer.Receiver,
-        amount: parseFloat(tx.Transfer.Amount).toFixed(6),
-        currency: 'ETH',
-        timestamp: tx.Block.Time,
-        status: tx.Transfer.Success ? 'confirmed' : 'failed',
+        hash: tx.Transaction?.Hash || '',
+        from: tx.Transfer?.Sender || '',
+        to: tx.Transfer?.Receiver || '',
+        amount: parseFloat(tx.Transfer?.Amount || 0).toFixed(6),
+        currency: tx.Transfer?.Currency?.Symbol || 'ETH',
+        timestamp: tx.Block?.Time || '',
+        status: tx.Transfer?.Success ? 'confirmed' : 'failed',
       }));
 
       setRecentTransactions(formattedTransactions);

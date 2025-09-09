@@ -33,15 +33,15 @@ const RecentActivity = () => {
         const result = await getRecentTransactions(JSON.stringify(addresses));
         const formattedTransactions = result.map((tx, index) => ({
           id: (index + 1).toString(), // or use tx.Transaction.Hash if you want a unique id
-          hash: tx.Transaction.Hash,
-          from: tx.Transfer.Sender,
-          to: tx.Transfer.Receiver,
-          amount: parseFloat(tx.Transfer.Amount).toFixed(6), // adjust decimals if needed
-          currency: 'ETH', // or determine dynamically if you have multiple currencies
-          timestamp: tx.Block.Time,
-          status: tx.Transfer.Success ? 'confirmed' : 'failed',
-          blockHeight: tx.Block.Number,
-          transactionFee: `${tx.Transaction.GasPrice} ETH`,
+          hash: tx.Transaction?.Hash || '',
+          from: tx.Transfer?.Sender || '',
+          to: tx.Transfer?.Receiver || '',
+          amount: parseFloat(tx.Transfer?.Amount || 0).toFixed(6), // adjust decimals if needed
+          currency: tx.Transfer?.Currency?.Symbol || 'ETH', // or determine dynamically if you have multiple currencies
+          timestamp: tx.Block?.Time || '',
+          status: tx.Transfer?.Success ? 'confirmed' : 'failed',
+          blockHeight: tx.Block?.Number || 0,
+          transactionFee: `${tx.Transaction?.GasPrice || 0} ETH`,
           caseId: "CPIB-2024-001"
         }));
         

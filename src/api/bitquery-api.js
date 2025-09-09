@@ -189,6 +189,7 @@ export const getRecentTransactions = async (addresses) => {
           Transfer {
             Receiver
             Sender
+            Success
             Currency {
               Decimals
               Name
