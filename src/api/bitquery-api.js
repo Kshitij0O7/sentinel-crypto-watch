@@ -175,28 +175,35 @@ export const getWalletLastActivity = async (address) => {
 export const getRecentTransactions = async (addresses) => {
   let query = `
     query MyQuery {
-        EVM {
-            Transfers(
-                where: {Transfer: {Sender: {in: ${addresses}}, Currency: {SmartContract: {is: "0x"}}}}
-                orderBy: {descending: Block_Time}
-                limit: {count:10}
-            ) {
-            Block {
-                Time
-                Number
+      EVM(dataset: realtime, network: eth) {
+        Transfers(
+          limit: {count: 10, offset: 0}
+          where: {any: [{Transaction: {From: {is: ${addresses}}}}, {Transaction: {To: {is: ${addresses}}}}]}
+          orderBy: {descending: Block_Time}
+        ) {
+          Block {
+            Time
+            Number
+            Date
+          }
+          Transfer {
+            Receiver
+            Sender
+            Currency {
+              Decimals
+              Name
+              SmartContract
+              Symbol
+              ProtocolName
             }
-            Transfer {
-                Amount
-                Sender
-                Receiver
-                Success
-            }
-            Transaction {
-                Hash
-                GasPrice
-            }
-            }
+            Amount
+            AmountInUSD
+          }
+          Transaction {
+            Hash
+          }
         }
+      }
     }
     `;
   config.data.query = query;
@@ -210,9 +217,9 @@ export const getRecentTransactions = async (addresses) => {
 export const getTransactionHistory = async (address) => {
   let query = `
     query MyQuery {
-        EVM(dataset: combined) {
+        EVM(dataset: realtime) {
             Transfers(
-            where: {Transfer: {Sender: {is: "${address}"}}}
+            where: {any: [{Transfer: {Sender: {is: "${address}"}}}, {Transfer: {Receiver: {is: "${address}"}}}]}
             orderBy: {descending: Block_Time}
             limit: {count:10}
             ) {
