@@ -178,7 +178,7 @@ export const getRecentTransactions = async (addresses) => {
       EVM(dataset: realtime, network: eth) {
         Transfers(
           limit: {count: 10, offset: 0}
-          where: {any: [{Transaction: {From: {is: ${addresses}}}}, {Transaction: {To: {is: ${addresses}}}}]}
+          where: {any: [{Transfer: {Sender: {in: ${addresses}}}}, {Transfer: {Receiver: {in: ${addresses}}}}]}
           orderBy: {descending: Block_Time}
         ) {
           Block {
@@ -210,8 +210,14 @@ export const getRecentTransactions = async (addresses) => {
   config.data.query = query;
 
   const response = await axios.request(config);
-  const result = response.data.data.EVM.Transfers;
-
+  
+  // Add better error handling
+  if (!response.data || !response.data.data || !response.data.data.EVM) {
+    console.error('API Response Error:', response.data);
+    return [];
+  }
+  
+  const result = response.data.data.EVM.Transfers || [];
   return result;
 };
 
