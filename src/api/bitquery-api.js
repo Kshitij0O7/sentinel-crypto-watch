@@ -218,28 +218,28 @@ export const getRecentTransactions = async (addresses) => {
 export const getTransactionHistory = async (address) => {
   let query = `
     query MyQuery {
-        EVM(dataset: realtime) {
-            Transfers(
-            where: {any: [{Transfer: {Sender: {is: "${address}"}}}, {Transfer: {Receiver: {is: "${address}"}}}]}
-            orderBy: {descending: Block_Time}
-            limit: {count:10}
-            ) {
-            Block {
-                Time
-                Number
-            }
-            Transfer {
-                Amount
-                Sender
-                Receiver
-                Success
-            }
-            Transaction {
-                Hash
-                GasPrice
-            }
-            }
+      EVM(dataset: combined) {
+        Transfers(
+          where: {any: [{Transfer: {Sender: {is: "${address}"}}}, {Transfer: {Receiver: {is: "${address}"}}}], Block: {Date: {after: "2025-09-01"}}}
+          orderBy: {descending: Block_Time}
+          limit: {count: 10}
+        ) {
+          Block {
+            Time
+            Number
+          }
+          Transfer {
+            Amount
+            Sender
+            Receiver
+            Success
+          }
+          Transaction {
+            Hash
+            GasPrice
+          }
         }
+      }
     }
     `;
   config.data.query = query;
