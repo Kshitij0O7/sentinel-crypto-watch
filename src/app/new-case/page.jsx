@@ -36,13 +36,13 @@ const NewCase = () => {
     {
       id: "1",
       name: "Primary Investigation Team",
-      emails: ["detective.lim@cpib.gov.sg", "analyst.tan@cpib.gov.sg"],
+      emails: ["example1m@gmail.com", "example2@gmail.com"],
       createdDate: "2024-01-10"
     },
     {
       id: "2", 
       name: "Senior Management",
-      emails: ["director@cpib.gov.sg", "supervisor.wong@cpib.gov.sg"],
+      emails: ["example3@gmail.com", "example4@gmail.com"],
       createdDate: "2024-01-12"
     }
   ]);
